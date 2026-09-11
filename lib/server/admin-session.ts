@@ -22,7 +22,13 @@ const cookieOptions = (maxAge: number) => ({
 });
 
 export function backendUrl(path: string): string {
-  const baseUrl = (process.env.NAO_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+  // Auth uses a same-origin Next.js BFF. Keep the upstream API URL server-only
+  // so the browser never needs direct access to the bearer-token backend.
+  const baseUrl = (
+    process.env.NAO_API_URL
+    ?? process.env.NEXT_PUBLIC_API_URL
+    ?? "http://localhost:8000"
+  ).replace(/\/$/, "");
   return `${baseUrl}${path}`;
 }
 

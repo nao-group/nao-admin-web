@@ -11,9 +11,11 @@ npm run dev
 
 Open `http://localhost:3000` and sign in with a staff account.
 
-The login now uses `nao-service`. Set `NAO_API_URL` when the backend is not
-available at the default `http://localhost:8000` address. Access and refresh
-tokens are kept in secure, HTTP-only cookies by the Next.js auth route handlers.
+The login now uses `nao-service`. Set the server-only `NAO_API_URL` when the
+backend is not available at the default `http://localhost:8000` address, then
+restart the Next.js process. The browser intentionally calls the same-origin
+`/api/auth/*` route handlers; those handlers forward requests to `NAO_API_URL`
+and keep access and refresh tokens in secure, HTTP-only cookies.
 
 ## Included modules
 
