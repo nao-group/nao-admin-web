@@ -4,6 +4,7 @@ import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
+import "katex/dist/katex.min.css";
 import "./globals.css";
 import { theme } from "@/lib/theme";
 

@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { ActionIcon, AppShell, Avatar, Box, Burger, Center, Divider, Group, Loader, ScrollArea, Stack, Text, Tooltip, UnstyledButton } from "@mantine/core";
-import { IconBell, IconChevronDown, IconCreditCard, IconGift, IconLayoutDashboard, IconLogout, IconMail, IconSchool, IconUsers, type Icon } from "@tabler/icons-react";
+import { AppShell, Avatar, Box, Burger, Center, Divider, Group, Loader, ScrollArea, Stack, Text, Tooltip, UnstyledButton } from "@mantine/core";
+import { IconCreditCard, IconGift, IconLayoutDashboard, IconLogout, IconMail, IconSchool, IconUsers, type Icon } from "@tabler/icons-react";
 import { defaultAdminRoute, hasAnyRole, primaryRole, ROLE_LABELS, type AdminRole } from "@/lib/admin-access";
 import { getAdminSession, logoutAdmin } from "@/lib/auth-api";
 import { useAuthStore } from "@/store/auth";
@@ -25,7 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/announcements/banners", label: "Announcement Banner", icon: IconLayoutDashboard, group: "CONTENT", roles: STAFF_ROLES },
   { href: "/referrals", label: "Referral Codes", icon: IconGift, group: "CONTENT", roles: STAFF_ROLES },
   { href: "/emails", label: "Announcement Email", icon: IconMail, group: "COMMUNICATION", roles: STAFF_ROLES },
-  { href: "/learning", label: "Learning Workspace", icon: IconSchool, group: "LEARNING", roles: ["superadmin", "admin", "teacher"] },
+  { href: "/learning/questions", label: "Question Extractor", icon: IconSchool, group: "LEARNING", roles: ["superadmin", "admin", "teacher"] },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
