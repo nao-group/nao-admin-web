@@ -1,27 +1,16 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import type { AdminSession } from "@/lib/admin-access";
 
 type AuthState = {
-  authenticated: boolean;
-  hydrated: boolean;
-  login: () => void;
-  logout: () => void;
-  setHydrated: (value: boolean) => void;
+  session: AdminSession | null;
+  setSession: (session: AdminSession) => void;
+  clearSession: () => void;
 };
 
-export const useAuthStore = create<AuthState>()(persist(
-  (set) => ({
-    authenticated: false,
-    hydrated: false,
-    login: () => set({ authenticated: true }),
-    logout: () => set({ authenticated: false }),
-    setHydrated: (hydrated) => set({ hydrated }),
-  }),
-  {
-    name: "nao-admin-auth",
-    partialize: (state) => ({ authenticated: state.authenticated }),
-    onRehydrateStorage: () => (state) => state?.setHydrated(true),
-  },
-));
+export const useAuthStore = create<AuthState>()((set) => ({
+  session: null,
+  setSession: (session) => set({ session }),
+  clearSession: () => set({ session: null }),
+}));

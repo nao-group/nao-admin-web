@@ -9,7 +9,11 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`. The prototype login is prefilled for local review.
+Open `http://localhost:3000` and sign in with a staff account.
+
+The login now uses `nao-service`. Set `NAO_API_URL` when the backend is not
+available at the default `http://localhost:8000` address. Access and refresh
+tokens are kept in secure, HTTP-only cookies by the Next.js auth route handlers.
 
 ## Included modules
 
@@ -27,6 +31,6 @@ The app follows the same domain-oriented App Router structure used by `thinknao-
 - `components` contains shared shell, authentication, chart, and UI components
 - `constants`, `lib`, `store`, and `types` contain cross-feature concerns
 
-Routes are available at `/members`, `/payments`, `/announcements/banners`, `/referrals`, and `/emails`.
+Routes are available at `/members`, `/payments`, `/announcements/banners`, `/referrals`, `/emails`, and `/learning`.
 
-The current implementation uses local mock data and Zustand client state. Uploaded images are kept as local data URLs for the prototype; replace these mutations and image storage with API/object-storage calls when the backend contract is available.
+Dashboard feature data still uses local mock data. Uploaded images are kept as local data URLs for the prototype; replace these mutations and image storage with API/object-storage calls when the backend contract is available.
