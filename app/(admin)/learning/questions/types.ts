@@ -9,10 +9,15 @@ export type ExtractionJob = { id: string; subject: string; status: ExtractionSta
   job_type?: "file_extraction" | "question_reprocess"; selected_question_ids?: string[];
   question_extraction_files?: ExtractionFile[] };
 export type QuestionContent = { question?: string | Record<string, string>; answer?: Record<string, string>; choices?: Record<string, string> };
+export type VocabEntry = { pinyin?: string; en: string; en_phrase?: string };
+export type Vocab = Record<string, VocabEntry>;
+export type EnVocabEntry = { zh: string; pinyin?: string };
+export type ExplanationAlignment = { vocab_zh?: Vocab; vocab_en?: Record<string, EnVocabEntry> };
+export type QuestionAlignment = { vocab?: Vocab; explanation?: ExplanationAlignment };
 export type QuestionSummary = { id: string; code: string; difficulty: string; status: string; question_type: string;
   content_en: QuestionContent; content_zh: QuestionContent; image_url?: string | null; created_at: string };
 export type QuestionDetail = QuestionSummary & { answer: string; explanation_en: string; explanation_zh: string;
-  alignment?: Record<string, unknown>; extraction_job_id: string; topics?: { code: string; name: string; subjects?: { code: string; name: string } } };
+  alignment?: QuestionAlignment; extraction_job_id: string; topics?: { code: string; name: string; subjects?: { code: string; name: string } } };
 export type PageResult<T> = { items: T[]; total: number; page: number; page_size: number };
 export type ExtractorReadiness = { ready: boolean; ocr_provider: string; missing: string[] };
 export type ProviderName = "anthropic" | "deepseek" | "kimi";
