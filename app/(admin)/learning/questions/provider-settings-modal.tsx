@@ -68,14 +68,22 @@ export function ProviderSettingsModal({ opened, onClose, onSaved }: {
               <Group justify="space-between" wrap="nowrap"><Group gap="xs"><IconKey size={18}/><Text fw={700}>{label}</Text></Group>
                 <Badge color={personal ? "yellow" : "gray"} variant="light">{personal ? "Personal" : "Default"}</Badge></Group>
               <Text size="sm" c="dimmed" mih={62}>{help}</Text>
-              <Switch checked={personal} label="Use my own API key" onChange={(event) => setDraft((current) => ({
-                ...current, [id]: { ...current[id], use_default: !event.currentTarget.checked },
-              }))}/>
-              {personal && <PasswordInput label={`${label} API key`} value={draft[id].api_key ?? ""}
-                placeholder={status?.personal_key_configured ? "Saved — leave blank to keep" : "Paste API key"}
-                autoComplete="new-password" onChange={(event) => setDraft((current) => ({
-                  ...current, [id]: { ...current[id], api_key: event.currentTarget.value },
-                }))}/>} 
+              <Switch checked={personal} label="Use my own API key" onChange={(event) => {
+                const checked = event.currentTarget.checked;
+                setDraft((current) => ({
+                  ...current, [id]: { ...current[id], use_default: !checked },
+                }));
+              }}/>
+              {personal && (
+                <PasswordInput label={`${label} API key`} value={draft[id].api_key ?? ""}
+                  placeholder={status?.personal_key_configured ? "Saved — leave blank to keep" : "Paste API key"}
+                  autoComplete="new-password" onChange={(event) => {
+                    const apiKey = event.currentTarget.value;
+                    setDraft((current) => ({
+                      ...current, [id]: { ...current[id], api_key: apiKey },
+                    }));
+                  }}/>
+              )}
               <Text size="xs" c={draft[id].use_default && !status?.default_key_configured ? "red" : "dimmed"}>
                 {draft[id].use_default
                   ? status?.default_key_configured ? "Backend default is configured." : "Backend default is not configured."
