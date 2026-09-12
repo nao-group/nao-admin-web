@@ -17,6 +17,8 @@ const SUBJECTS = [
 ];
 const ACCEPT = ".png,.jpg,.jpeg,.pdf,.docx";
 const MAX_FILES = 250;
+const KILOBYTE = 1024;
+const MEGABYTE = KILOBYTE * 1024;
 const ACTIVE = new Set<ExtractionStatus>(["queued", "processing"]);
 const statusColor: Record<ExtractionStatus, string> = {
   queued: "gray", processing: "yellow", completed: "teal",
@@ -30,6 +32,16 @@ const stageLabel: Record<string, string> = {
   reprocessing: "Regenerating answers, alignment & embedding",
 };
 
+function formatFileSize(bytes: number): string {
+  if (bytes < KILOBYTE) return `${bytes} B`;
+  if (bytes < MEGABYTE) {
+    const kilobytes = bytes / KILOBYTE;
+    return `${kilobytes.toFixed(kilobytes < 10 ? 1 : 0)} KB`;
+  }
+  const megabytes = bytes / MEGABYTE;
+  return `${megabytes.toFixed(megabytes < 10 ? 1 : 0)} MB`;
+}
+
 function questionText(content: QuestionContent): string {
   const value = content.question;
   return typeof value === "string" ? value : value ? Object.values(value).join(" · ") : "Question text unavailable";
@@ -39,7 +51,7 @@ function QuestionBlock({ content }: { content: QuestionContent }) {
   const questions = typeof content.question === "string" ? { "1": content.question } : content.question ?? {};
   const choices = content.answer ?? content.choices ?? {};
   return <Stack gap="sm">{Object.entries(questions).map(([key, text]) =>
-    <Group key={key} align="flex-start" wrap="nowrap"><Badge variant="light" color="yellow" circle>{key}</Badge><Box flex={1}><MarkdownLatexText>{text}</MarkdownLatexText></Box></Group>)}
+    <Group key={key} align="flex-start" wrap="nowrap"><Box flex={1}><MarkdownLatexText>{text}</MarkdownLatexText></Box></Group>)}
     {Object.keys(choices).length > 0 && <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">{Object.entries(choices).map(([key, text]) =>
       <Card key={key} withBorder radius="md" padding="sm"><Group align="flex-start" wrap="nowrap"><Badge color="dark" variant="light" circle>{key}</Badge><Box flex={1}><MarkdownLatexText>{text}</MarkdownLatexText></Box></Group></Card>)}</SimpleGrid>}
   </Stack>;
@@ -201,7 +213,7 @@ export default function QuestionExtractorPage() {
           <ThemeIcon size={52} radius="xl" color="yellow" variant="light"><IconCloudUpload size={26} /></ThemeIcon><Text fw={700} mt="md">Drop question files here</Text><Text size="sm" c="dimmed" mb="md">or select individual files / one complete folder</Text><Group justify="center"><FileButton resetRef={resetRef} onChange={(value) => addFiles(value)} accept={ACCEPT} multiple>{(props) => <Button {...props} variant="light" color="dark" leftSection={<IconFile size={17}/>}>Choose files</Button>}</FileButton><Button variant="light" color="yellow" leftSection={<IconFolder size={17}/>} onClick={() => folderInputRef.current?.click()}>Choose folder</Button></Group>
           <input ref={folderInputRef} className="visually-hidden-file-input" type="file" multiple accept={ACCEPT} aria-label="Choose a folder containing question files" onChange={(event) => { addFiles(Array.from(event.currentTarget.files ?? [])); event.currentTarget.value = ""; }} {...({ webkitdirectory: "", directory: "" } as InputHTMLAttributes<HTMLInputElement>)} />
         </Box>
-        {files.length > 0 && <Stack gap="xs"><Group justify="space-between"><Text size="sm" fw={700}>{files.length} file{files.length === 1 ? "" : "s"} ready · click to preview</Text><Button size="compact-sm" variant="subtle" color="red" onClick={() => setFiles([])}>Clear all</Button></Group><Stack gap="xs" className="queued-files-scroll" role="list" aria-label="Files ready to upload">{files.map((file, index) => <Group key={`${file.webkitRelativePath || file.name}-${file.size}`} className="queued-file" justify="space-between" wrap="nowrap" role="listitem"><UnstyledButton className="queued-file-preview" onClick={() => openFilePreview(file)} aria-label={`Preview ${file.webkitRelativePath || file.name}`}><Group wrap="nowrap" miw={0}><IconFile size={18} /><Box miw={0}><Text size="sm" fw={600} className="path-text">{file.webkitRelativePath || file.name}</Text><Text size="xs" c="dimmed">{(file.size / 1024 / 1024).toFixed(1)} MB</Text></Box></Group></UnstyledButton><ActionIcon variant="subtle" color="red" aria-label={`Remove ${file.name}`} onClick={() => setFiles((items) => items.filter((_, i) => i !== index))}><IconTrash size={17} /></ActionIcon></Group>)}</Stack></Stack>}
+        {files.length > 0 && <Stack gap="xs"><Group justify="space-between"><Text size="sm" fw={700}>{files.length} file{files.length === 1 ? "" : "s"} ready · click to preview</Text><Button size="compact-sm" variant="subtle" color="red" onClick={() => setFiles([])}>Clear all</Button></Group><Stack gap="xs" className="queued-files-scroll" role="list" aria-label="Files ready to upload">{files.map((file, index) => <Group key={`${file.webkitRelativePath || file.name}-${file.size}`} className="queued-file" justify="space-between" wrap="nowrap" role="listitem"><UnstyledButton className="queued-file-preview" onClick={() => openFilePreview(file)} aria-label={`Preview ${file.webkitRelativePath || file.name}`}><Group wrap="nowrap" miw={0}><IconFile size={18} /><Box miw={0}><Text size="sm" fw={600} className="path-text">{file.webkitRelativePath || file.name}</Text><Text size="xs" c="dimmed">{formatFileSize(file.size)}</Text></Box></Group></UnstyledButton><ActionIcon variant="subtle" color="red" aria-label={`Remove ${file.name}`} onClick={() => setFiles((items) => items.filter((_, i) => i !== index))}><IconTrash size={17} /></ActionIcon></Group>)}</Stack></Stack>}
         {readiness && !readiness.ready && <Alert color="orange" icon={<IconAlertCircle size={18} />} title="Extractor configuration incomplete">Add {readiness.missing.join(", ")} to the backend environment before starting a job.</Alert>}
         <Button className="primary-action" size="md" leftSection={<IconCloudUpload size={18} />} disabled={!subject || !files.length || readiness?.ready === false} loading={uploading} onClick={submit}>Upload & start extraction</Button>
         <Alert color="blue" variant="light" icon={<IconClock size={18} />}>Jobs are stored in the database and resume after a server restart. Closing this browser page does not cancel processing.</Alert>
@@ -247,7 +259,7 @@ export default function QuestionExtractorPage() {
       </> : <Center mih={220}><Stack align="center" gap="xs"><IconBook2 size={30} color="#8b94a0"/><Text fw={600}>{search ? "No questions match this search" : selectedJob ? "No stored questions yet" : "Select an extraction job"}</Text><Text size="sm" c="dimmed">{search ? "Try a code, English phrase, or Chinese phrase." : "Completed, aligned questions will appear here."}</Text></Stack></Center>}
     </Card>
 
-    <Modal opened={Boolean(filePreview)} onClose={closeFilePreview} title="File preview" size="xl" centered><Stack gap="md">{filePreview && <Group justify="space-between" align="flex-start"><Box miw={0}><Text fw={700} className="path-text">{filePreview.webkitRelativePath || filePreview.name}</Text><Text size="sm" c="dimmed">{(filePreview.size / 1024 / 1024).toFixed(1)} MB · {filePreview.type || "Unknown file type"}</Text></Box><Badge variant="light" color="dark">{filePreview.name.split(".").pop()?.toUpperCase()}</Badge></Group>}{filePreviewUrl && previewIsImage && <Image src={filePreviewUrl} alt={`Preview of ${filePreview?.name}`} className="selected-file-image-preview" fit="contain" radius="md"/>}{filePreviewUrl && previewIsPdf && <iframe className="selected-file-pdf-preview" src={filePreviewUrl} title={`Preview of ${filePreview?.name}`} />}{filePreview && !previewIsImage && !previewIsPdf && <Alert color="blue" icon={<IconFile size={18}/>} title="Preview is not available for DOCX">The file is ready to upload, but this browser cannot render DOCX files directly. Image and PDF files can be previewed here.</Alert>}</Stack></Modal>
+    <Modal opened={Boolean(filePreview)} onClose={closeFilePreview} title="File preview" size="xl" centered><Stack gap="md">{filePreview && <Group justify="space-between" align="flex-start"><Box miw={0}><Text fw={700} className="path-text">{filePreview.webkitRelativePath || filePreview.name}</Text><Text size="sm" c="dimmed">{formatFileSize(filePreview.size)} · {filePreview.type || "Unknown file type"}</Text></Box><Badge variant="light" color="dark">{filePreview.name.split(".").pop()?.toUpperCase()}</Badge></Group>}{filePreviewUrl && previewIsImage && <Image src={filePreviewUrl} alt={`Preview of ${filePreview?.name}`} className="selected-file-image-preview" fit="contain" radius="md"/>}{filePreviewUrl && previewIsPdf && <iframe className="selected-file-pdf-preview" src={filePreviewUrl} title={`Preview of ${filePreview?.name}`} />}{filePreview && !previewIsImage && !previewIsPdf && <Alert color="blue" icon={<IconFile size={18}/>} title="Preview is not available for DOCX">The file is ready to upload, but this browser cannot render DOCX files directly. Image and PDF files can be previewed here.</Alert>}</Stack></Modal>
 
     <Modal opened={bulkAction !== null} onClose={() => !bulkBusy && setBulkAction(null)} title={bulkAction === "delete" ? "Delete selected questions?" : "Re-extract selected questions?"} centered>
       <Stack gap="lg"><Text size="sm">{bulkAction === "delete"

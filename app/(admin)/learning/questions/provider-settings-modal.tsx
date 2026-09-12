@@ -54,7 +54,7 @@ export function ProviderSettingsModal({ opened, onClose, onSaved }: {
     } finally { setLoading(false); }
   };
 
-  return <Modal opened={opened} onClose={onClose} title="Question extraction API keys" size="xl" centered>
+  return <Modal opened={opened} onClose={onClose} title="Question extraction API keys" size={1200} centered>
     <Stack gap="lg">
       <Alert color="blue" icon={<IconInfoCircle size={18} />}>
         Personal keys are encrypted on the server and are never returned to the browser. Existing keys stay unchanged when the field is left blank.
@@ -65,7 +65,7 @@ export function ProviderSettingsModal({ opened, onClose, onSaved }: {
           const personal = !draft[id].use_default;
           return <Card key={id} withBorder radius="lg" padding="lg">
             <Stack gap="md">
-              <Group justify="space-between" wrap="nowrap"><Group gap="xs"><IconKey size={18}/><Text fw={700}>{label}</Text></Group>
+              <Group justify="space-between" wrap="nowrap"><Group gap="xs" wrap="nowrap"><IconKey size={18}/><Text fw={700} style={{ whiteSpace: "nowrap" }}>{label}</Text></Group>
                 <Badge color={personal ? "yellow" : "gray"} variant="light">{personal ? "Personal" : "Default"}</Badge></Group>
               <Text size="sm" c="dimmed" mih={62}>{help}</Text>
               <Switch checked={personal} label="Use my own API key" onChange={(event) => {
