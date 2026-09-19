@@ -33,7 +33,7 @@ export async function resumeJob(id: string): Promise<ExtractionJob> {
   return result(await fetch(`/api/admin/question-extractions/${id}/resume`, { method: "POST" }));
 }
 export async function getQuestions(jobId: string, page = 1, search = ""): Promise<PageResult<QuestionSummary>> {
-  const params = new URLSearchParams({ page: String(page), page_size: "20", search });
+  const params = new URLSearchParams({ page: String(page), page_size: "20", search, _: String(Date.now()) });
   return result(await fetch(`/api/admin/question-extractions/${jobId}/questions?${params}`, { cache: "no-store" }));
 }
 export async function getQuestion(jobId: string, questionId: string): Promise<QuestionDetail> {
@@ -47,5 +47,32 @@ export async function deleteQuestions(jobId: string, questionIds: string[]): Pro
 export async function reprocessQuestions(jobId: string, questionIds: string[]): Promise<ExtractionJob> {
   return result(await fetch(`/api/admin/question-extractions/${jobId}/questions/reprocess`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question_ids: questionIds }),
+  }));
+}
+
+export type ReviewAction = "hold" | "ready" | "delete" | "approve";
+export async function reviewStaged(jobId: string, questionIds: string[], action: ReviewAction): Promise<{ updated?: number; deleted?: number; promoted?: number; failed?: number }> {
+  return result(await fetch(`/api/admin/question-extractions/${jobId}/staging/review`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question_ids: questionIds, action }),
+  }));
+}
+export async function syncStaged(jobId: string, questionIds: string[]): Promise<{ promoted: number; failed: number }> {
+  return result(await fetch(`/api/admin/question-extractions/${jobId}/staging/sync`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question_ids: questionIds }),
+  }));
+}
+export async function reextractStaged(jobId: string, questionId: string): Promise<ExtractionJob> {
+  return result(await fetch(`/api/admin/question-extractions/${jobId}/staging/${questionId}/reextract`, { method: "POST" }));
+}
+export async function replaceStagedImage(jobId: string, questionId: string, file: File): Promise<{ image_url: string }> {
+  const form = new FormData(); form.set("file", file);
+  return result(await fetch(`/api/admin/question-extractions/${jobId}/staging/${questionId}/image`, { method: "POST", body: form }));
+}
+export async function deleteStagedImage(jobId: string, questionId: string): Promise<{ image_url: null }> {
+  return result(await fetch(`/api/admin/question-extractions/${jobId}/staging/${questionId}/image`, { method: "DELETE" }));
+}
+export async function cropStagedImage(jobId: string, questionId: string, box: { x0: number; y0: number; x1: number; y1: number }): Promise<{ image_url: string }> {
+  return result(await fetch(`/api/admin/question-extractions/${jobId}/staging/${questionId}/crop`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(box),
   }));
 }

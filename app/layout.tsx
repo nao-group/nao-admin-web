@@ -27,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="id" className={poppins.variable} suppressHydrationWarning>
       <head><ColorSchemeScript defaultColorScheme="light" /></head>
-      <body>
+      <body suppressHydrationWarning>
         <MantineProvider theme={theme} defaultColorScheme="light">
           <Notifications position="top-right" />
           {children}

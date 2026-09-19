@@ -19,3 +19,13 @@ export async function DELETE(request: Request, context: RouteContext<"/api/admin
   const { path } = await context.params;
   return forwardApiResponse(await adminApiFetch(target(request, path), { method: "DELETE" }));
 }
+export async function PATCH(request: Request, context: RouteContext<"/api/admin/[...path]">) {
+  const { path } = await context.params;
+  const contentType = request.headers.get("content-type") ?? "application/json";
+  return forwardApiResponse(await adminApiFetch(target(request, path), { method: "PATCH", body: await request.text(), headers: { "content-type": contentType } }));
+}
+export async function PUT(request: Request, context: RouteContext<"/api/admin/[...path]">) {
+  const { path } = await context.params;
+  const contentType = request.headers.get("content-type") ?? "application/json";
+  return forwardApiResponse(await adminApiFetch(target(request, path), { method: "PUT", body: await request.text(), headers: { "content-type": contentType } }));
+}
