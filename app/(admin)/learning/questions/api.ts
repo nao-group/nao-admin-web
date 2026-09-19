@@ -1,4 +1,4 @@
-import type { ExtractionJob, ExtractorReadiness, PageResult, ProviderKeyUpdate, ProviderName, ProviderSettings, QuestionDetail, QuestionSummary } from "./types";
+import type { ExtractionJob, ExtractorReadiness, GalleryImage, PageResult, ProviderKeyUpdate, ProviderName, ProviderSettings, QuestionDetail, QuestionSummary } from "./types";
 export class QuestionExtractionError extends Error {}
 async function result<T>(response: Response): Promise<T> {
   const body = await response.json().catch(() => ({}));
@@ -38,6 +38,10 @@ export async function getQuestions(jobId: string, page = 1, search = ""): Promis
 }
 export async function getQuestion(jobId: string, questionId: string): Promise<QuestionDetail> {
   return result(await fetch(`/api/admin/question-extractions/${jobId}/questions/${questionId}`, { cache: "no-store" }));
+}
+export async function getGallery(page = 1, search = "", status = "all"): Promise<PageResult<GalleryImage>> {
+  const params = new URLSearchParams({ page: String(page), page_size: "24", search, status });
+  return result(await fetch(`/api/admin/question-extractions/gallery?${params}`, { cache: "no-store" }));
 }
 export async function deleteQuestions(jobId: string, questionIds: string[]): Promise<{ deleted: number }> {
   return result(await fetch(`/api/admin/question-extractions/${jobId}/questions/bulk-delete`, {

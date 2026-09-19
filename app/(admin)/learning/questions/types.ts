@@ -20,6 +20,8 @@ export type QuestionSummary = { id: string; code: string; difficulty: string; st
 export type QuestionDetail = QuestionSummary & { answer: string; explanation_en: string; explanation_zh: string;
   alignment?: QuestionAlignment; extraction_job_id?: string; job_id?: string; file_id?: string;
   topics?: { code: string; name: string; subjects?: { code: string; name: string } } };
+export type GalleryImage = { id: string; job_id: string; code: string; image_url: string; status: string;
+  editable: boolean; subject?: string | null; source_file_name?: string | null; created_at: string; updated_at?: string | null };
 export type PageResult<T> = { items: T[]; total: number; page: number; page_size: number };
 export type ExtractorReadiness = { ready: boolean; ocr_provider: string; missing: string[] };
 export type ProviderName = "anthropic" | "deepseek" | "kimi";

@@ -156,6 +156,15 @@ button, [role="button"] { cursor: pointer; }
 .question-image-trigger:hover img { opacity: .86; }
 .question-image-trigger:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .question-image-edit-label { position: absolute; right: 12px; bottom: 12px; display: inline-flex; min-height: 44px; align-items: center; gap: 7px; padding: 9px 13px; border: 1px solid rgba(255,255,255,.6); border-radius: 10px; color: #fff; background: rgba(25,27,30,.82); box-shadow: 0 6px 18px rgba(0,0,0,.18); font-size: 13px; font-weight: 700; backdrop-filter: blur(8px); }
+.gallery-filter-group { flex-wrap: wrap; }
+.question-gallery-card { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: #fffdf8; box-shadow: 0 5px 18px rgba(42,36,24,.05); text-align: left; transition: border-color 150ms ease,box-shadow 150ms ease,transform 150ms ease; }
+.question-gallery-card:hover { border-color: rgba(167,121,5,.46); box-shadow: 0 10px 24px rgba(42,36,24,.1); transform: translateY(-2px); }
+.question-gallery-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.question-gallery-image-wrap { position: relative; display: grid; place-items: center; overflow: hidden; border-bottom: 1px solid var(--border); background: #f7f5ef; }
+.question-gallery-image-wrap img { transition: transform 180ms ease,opacity 180ms ease; }
+.question-gallery-card:hover .question-gallery-image-wrap img { opacity: .9; transform: scale(1.015); }
+.question-gallery-action { position: absolute; right: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid rgba(255,255,255,.55); border-radius: 9px; color: #fff; background: rgba(25,27,30,.78); font-size: 12px; font-weight: 700; backdrop-filter: blur(8px); }
+.question-gallery-modal-image { min-height: 240px; background: #f7f5ef; }
 .resizable-question-table th, .resizable-question-table td { overflow: hidden; }
 .resizable-question-header { position: relative; }
 .question-column-resizer { position: absolute; z-index: 2; top: 0; right: -5px; width: 10px; height: 100%; cursor: col-resize; touch-action: none; }
@@ -204,5 +213,7 @@ button, [role="button"] { cursor: pointer; }
   .carousel-controls { align-items: flex-start !important; flex-direction: column; }
   .extractor-dropzone { min-height: 200px; padding: 20px; }
   .job-strip { grid-template-columns: 1fr; }
+  .gallery-filter-group { width: 100%; align-items: stretch !important; }
+  .gallery-filter-group > * { flex: 1 1 180px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }

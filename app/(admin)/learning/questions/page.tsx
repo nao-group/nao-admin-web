@@ -10,6 +10,7 @@ import type { ExtractionJob, ExtractionStatus, ExtractorReadiness, PageResult, Q
 import { ProviderSettingsModal } from "./provider-settings-modal";
 import { AlignedText, englishVocabToAlignment } from "./aligned-text";
 import { StagedImageEditor } from "./staged-image-editor";
+import { QuestionExtractorNav } from "./question-extractor-nav";
 
 const SUBJECTS = [
   { value: "PH", label: "Physics" }, { value: "MT", label: "Mathematics" },
@@ -341,6 +342,7 @@ export default function QuestionExtractorPage() {
 
   return <>
     <PageHeader eyebrow="Learning tools" title="Question extractor" description="Upload files, review extracted questions and images, then approve them for the question bank." />
+    <QuestionExtractorNav active="questions" />
     <Group justify="flex-end" mb="lg"><Button variant="light" color="dark" leftSection={<IconKey size={17}/>} onClick={() => setProviderSettingsOpen(true)}>API key settings</Button></Group>
     <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="xl" className="extractor-top-grid">
       <Card className="surface-card" p="xl"><Stack gap="lg"><Box><Title order={2} className="section-title">Start a new extraction</Title><Text size="sm" c="dimmed" mt={5}>PNG, JPG, PDF, or DOCX · up to 25 MB each · max {MAX_FILES} files</Text></Box><Select label="Subject" data={SUBJECTS} value={subject} onChange={setSubject} size="md" />
