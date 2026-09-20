@@ -78,73 +78,75 @@ export function LineChart({ data, labels, color = "#d4a017", fill = "#fff4cf", f
   );
 }
 
-type ProductKey = "think" | "study";
+export type DonutItem = { key: string; label: string; value: number; percentage: number };
 
-const distribution = {
-  think: { label: "ThinkNAO", value: 2209, percentage: 68, color: "#0f172a" },
-  study: { label: "StudyNAO", value: 1039, percentage: 32, color: "#d4a017" },
-};
+const PALETTE = ["#0f172a", "#d4a017", "#2f7a5c", "#7c3aed", "#c0392b", "#0e7490"];
 
-export function DistributionDonut() {
-  const [active, setActive] = useState<ProductKey | null>(null);
-  const center = active ? distribution[active] : { label: "total member", value: 3248, percentage: 100 };
+export function DistributionDonut({ items, totalLabel = "total member" }: { items: DonutItem[]; totalLabel?: string }) {
+  const [active, setActive] = useState<string | null>(null);
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  const activeItem = active ? items.find((item) => item.key === active) : undefined;
+  const center = activeItem ?? { label: totalLabel, value: total, percentage: 100 };
+
+  const segments = items.map((item, index) => {
+    const priorPercentage = items.slice(0, index).reduce((sum, i) => sum + i.percentage, 0);
+    return { ...item, color: PALETTE[index % PALETTE.length], dashoffset: -priorPercentage };
+  });
+
+  if (!items.length) {
+    return <Text size="sm" c="dimmed">No members yet.</Text>;
+  }
 
   return (
     <Box className="donut-grid">
       <Box className="donut-chart-wrap">
-        <svg viewBox="0 0 200 200" className="donut-chart" role="img" aria-label="Distribusi member: ThinkNAO 2.209 atau 68 persen, StudyNAO 1.039 atau 32 persen">
+        <svg viewBox="0 0 200 200" className="donut-chart" role="img" aria-label={`Distribusi member: ${items.map((item) => `${item.label} ${item.value.toLocaleString("id-ID")} atau ${item.percentage}%`).join(", ")}`}>
           <circle cx="100" cy="100" r="72" fill="none" stroke="#ece8df" strokeWidth="28" />
-          {(Object.keys(distribution) as ProductKey[]).map((key) => {
-            const item = distribution[key];
-            return (
-              <circle
-                key={key}
-                className="donut-segment"
-                data-active={active === key || undefined}
-                cx="100"
-                cy="100"
-                r="72"
-                pathLength="100"
-                fill="none"
-                stroke={item.color}
-                strokeWidth={active === key ? 34 : 28}
-                strokeDasharray={`${item.percentage} ${100 - item.percentage}`}
-                strokeDashoffset={key === "study" ? -68 : 0}
-                transform="rotate(-90 100 100)"
-                tabIndex={0}
-                role="img"
-                aria-label={`${item.label}: ${item.value.toLocaleString("id-ID")} member, ${item.percentage}%`}
-                onMouseEnter={() => setActive(key)}
-                onMouseLeave={() => setActive(null)}
-                onFocus={() => setActive(key)}
-                onBlur={() => setActive(null)}
-              />
-            );
-          })}
+          {segments.map((item) => (
+            <circle
+              key={item.key}
+              className="donut-segment"
+              data-active={active === item.key || undefined}
+              cx="100"
+              cy="100"
+              r="72"
+              pathLength="100"
+              fill="none"
+              stroke={item.color}
+              strokeWidth={active === item.key ? 34 : 28}
+              strokeDasharray={`${item.percentage} ${100 - item.percentage}`}
+              strokeDashoffset={item.dashoffset}
+              transform="rotate(-90 100 100)"
+              tabIndex={0}
+              role="img"
+              aria-label={`${item.label}: ${item.value.toLocaleString("id-ID")} member, ${item.percentage}%`}
+              onMouseEnter={() => setActive(item.key)}
+              onMouseLeave={() => setActive(null)}
+              onFocus={() => setActive(item.key)}
+              onBlur={() => setActive(null)}
+            />
+          ))}
           <text x="100" y="95" textAnchor="middle" className="donut-center-value">{center.value.toLocaleString("id-ID")}</text>
           <text x="100" y="119" textAnchor="middle" className="donut-center-label">{center.label}</text>
-          {active && <text x="100" y="138" textAnchor="middle" className="donut-center-percent">{center.percentage}%</text>}
+          {activeItem && <text x="100" y="138" textAnchor="middle" className="donut-center-percent">{activeItem.percentage}%</text>}
         </svg>
       </Box>
       <Box>
-        {(Object.keys(distribution) as ProductKey[]).map((key) => {
-          const item = distribution[key];
-          return (
-            <UnstyledButton
-              key={key}
-              className="legend-row"
-              data-active={active === key || undefined}
-              onMouseEnter={() => setActive(key)}
-              onMouseLeave={() => setActive(null)}
-              onFocus={() => setActive(key)}
-              onBlur={() => setActive(null)}
-              aria-label={`${item.label}: ${item.value.toLocaleString("id-ID")} member, ${item.percentage}%`}
-            >
-              <Group gap={8}><span className={`legend-dot ${key}`} /><Text size="sm">{item.label}</Text></Group>
-              <Box ta="right"><Text fw={700}>{item.value.toLocaleString("id-ID")}</Text><Text size="xs" c="dimmed">{item.percentage}%</Text></Box>
-            </UnstyledButton>
-          );
-        })}
+        {segments.map((item) => (
+          <UnstyledButton
+            key={item.key}
+            className="legend-row"
+            data-active={active === item.key || undefined}
+            onMouseEnter={() => setActive(item.key)}
+            onMouseLeave={() => setActive(null)}
+            onFocus={() => setActive(item.key)}
+            onBlur={() => setActive(null)}
+            aria-label={`${item.label}: ${item.value.toLocaleString("id-ID")} member, ${item.percentage}%`}
+          >
+            <Group gap={8}><span className="legend-dot" style={{ backgroundColor: item.color }} /><Text size="sm">{item.label}</Text></Group>
+            <Box ta="right"><Text fw={700}>{item.value.toLocaleString("id-ID")}</Text><Text size="xs" c="dimmed">{item.percentage}%</Text></Box>
+          </UnstyledButton>
+        ))}
         <Text size="xs" c="dimmed" mt="md" lh={1.6}>Arahkan cursor atau fokuskan segmen untuk melihat detail distribusi.</Text>
       </Box>
     </Box>

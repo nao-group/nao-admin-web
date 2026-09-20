@@ -1,13 +1,3 @@
-export type Member = {
-  id: string;
-  name: string;
-  email: string;
-  product: "ThinkNAO" | "StudyNAO";
-  plan: string;
-  status: "Active" | "Trial" | "Inactive";
-  joined: string;
-};
-
 export type Payment = {
   id: string;
   member: string;
