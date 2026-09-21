@@ -2,6 +2,9 @@ export const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", 
 
 export const formatDate = (value: string) => value === "—" ? value : new Date(value.length === 10 ? `${value}T12:00:00` : value).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
 
+// "May 2026" — used by the subscription history timeline
+export const formatMonthYear = (value: string) => new Date(value).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
 export function statusColor(status: string) {
   if (["Active", "Paid", "Sent"].includes(status)) return "teal";
   if (["Trial", "Pending", "Scheduled"].includes(status)) return "yellow";
