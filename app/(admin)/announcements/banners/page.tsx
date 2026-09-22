@@ -21,9 +21,9 @@ export default function BannersPage() {
   const [dragOverId, setDragOverId] = useState<number | null>(null);
 
   function remove(id: number) {
-    if (!window.confirm("Delete this banner?")) return;
+    if (!window.confirm("Hapus banner ini?")) return;
     deleteBanner(id);
-    notifications.show({ color: "red", title: "Banner deleted", message: "Banner dihapus dari carousel admin." });
+    notifications.show({ color: "red", title: "Banner dihapus", message: "Banner dihapus dari carousel admin." });
   }
 
   function moveBanner(id: number, direction: -1 | 1) {
@@ -38,17 +38,17 @@ export default function BannersPage() {
   }
 
   return <>
-    <PageHeader eyebrow="Content management" title="Announcement banners" description="Upload banner yang akan tampil langsung di carousel dashboard ThinkNAO." action={<Button className="primary-action" leftSection={<IconPlus size={17} />} onClick={() => setModal({ editing: null })}>Upload banner</Button>} />
+    <PageHeader eyebrow="Manajemen konten" title="Banner pengumuman" description="Upload banner yang akan tampil langsung di carousel dashboard ThinkNAO." action={<Button className="primary-action" leftSection={<IconPlus size={17} />} onClick={() => setModal({ editing: null })}>Upload banner</Button>} />
     <Card className="surface-card" p="lg" mb="lg">
       <Group justify="space-between" mb="lg">
-        <Box><Text className="section-title">Carousel preview</Text><Text size="xs" c="dimmed" mt={3}>Rasio dan urutan mengikuti area announcement di ThinkNAO.</Text></Box>
-        <Badge variant="light" color="yellow">{banners.length} banners</Badge>
+        <Box><Text className="section-title">Preview carousel</Text><Text size="xs" c="dimmed" mt={3}>Rasio dan urutan mengikuti area pengumuman di ThinkNAO.</Text></Box>
+        <Badge variant="light" color="yellow">{banners.length} banner</Badge>
       </Group>
       <BannerCarouselPreview banners={banners} />
     </Card>
 
     <Group justify="space-between" mb="md">
-      <Box><Text className="section-title">Banner library</Text><Text size="xs" c="dimmed">Drag handle untuk mengubah urutan carousel. Tombol panah juga tersedia.</Text></Box>
+      <Box><Text className="section-title">Koleksi banner</Text><Text size="xs" c="dimmed">Tarik handle untuk mengubah urutan carousel. Tombol panah juga tersedia.</Text></Box>
     </Group>
     <SimpleGrid cols={{ base: 1, md: 2, xl: 3 }}>
       {banners.map((banner, index) => <Box
@@ -86,25 +86,25 @@ export default function BannersPage() {
               }}
             >
               <IconGripVertical size={18} aria-hidden="true" />
-              <Text size="xs" fw={600}>Drag to reorder</Text>
+              <Text size="xs" fw={600}>Tarik untuk mengurutkan</Text>
             </UnstyledButton>
             <Group gap={4} wrap="nowrap">
               <ActionIcon variant="subtle" color="gray" disabled={index === 0} onClick={() => moveBanner(banner.id, -1)} aria-label={`Move ${banner.name} up`}><IconChevronUp size={16} /></ActionIcon>
               <ActionIcon variant="subtle" color="gray" disabled={index === banners.length - 1} onClick={() => moveBanner(banner.id, 1)} aria-label={`Move ${banner.name} down`}><IconChevronDown size={16} /></ActionIcon>
             </Group>
           </Group>
-          <Box className="banner-thumb">{banner.imageUrl ? <Image src={banner.imageUrl} alt={banner.name} fit="cover" h="100%" /> : <Stack align="center" gap={4}><IconPhoto size={25} /><Text size="xs">Image pending</Text></Stack>}</Box>
+          <Box className="banner-thumb">{banner.imageUrl ? <Image src={banner.imageUrl} alt={banner.name} fit="cover" h="100%" /> : <Stack align="center" gap={4}><IconPhoto size={25} /><Text size="xs">Gambar belum tersedia</Text></Stack>}</Box>
           <Box p="lg">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <Box className="banner-card-copy"><Text fw={700}>{banner.name}</Text><Text size="xs" c="dimmed" mt={3}>{banner.fileName}</Text></Box>
-              <Menu position="bottom-end"><Menu.Target><ActionIcon variant="subtle" color="gray" aria-label={`Actions for ${banner.name}`}><IconMenu2 size={18} /></ActionIcon></Menu.Target><Menu.Dropdown><Menu.Item leftSection={<IconEdit size={15} />} onClick={() => setModal({ editing: banner })}>Edit</Menu.Item><Menu.Item color="red" leftSection={<IconTrash size={15} />} onClick={() => remove(banner.id)}>Delete</Menu.Item></Menu.Dropdown></Menu>
+              <Menu position="bottom-end"><Menu.Target><ActionIcon variant="subtle" color="gray" aria-label={`Aksi ${banner.name}`}><IconMenu2 size={18} /></ActionIcon></Menu.Target><Menu.Dropdown><Menu.Item leftSection={<IconEdit size={15} />} onClick={() => setModal({ editing: banner })}>Edit</Menu.Item><Menu.Item color="red" leftSection={<IconTrash size={15} />} onClick={() => remove(banner.id)}>Hapus</Menu.Item></Menu.Dropdown></Menu>
             </Group>
-            <Group mt="lg" justify="space-between"><StatusBadge status={banner.status} />{banner.redirectUrl ? <Group gap={4} wrap="nowrap" className="banner-redirect-value"><IconExternalLink size={13} /><Text size="xs" c="dimmed" lineClamp={1}>{banner.redirectUrl}</Text></Group> : <Text size="xs" c="dimmed">No redirect</Text>}</Group>
-            <Box className="schedule-block" mt="md"><Text size="xs" c="dimmed">Scheduled visibility</Text><Text size="sm" fw={600}>{formatDate(banner.startsAt)} — {formatDate(banner.endsAt)}</Text></Box>
+            <Group mt="lg" justify="space-between"><StatusBadge status={banner.status} />{banner.redirectUrl ? <Group gap={4} wrap="nowrap" className="banner-redirect-value"><IconExternalLink size={13} /><Text size="xs" c="dimmed" lineClamp={1}>{banner.redirectUrl}</Text></Group> : <Text size="xs" c="dimmed">Tanpa redirect</Text>}</Group>
+            <Box className="schedule-block" mt="md"><Text size="xs" c="dimmed">Jadwal tampil</Text><Text size="sm" fw={600}>{formatDate(banner.startsAt)} — {formatDate(banner.endsAt)}</Text></Box>
           </Box>
         </Card>
       </Box>)}
     </SimpleGrid>
-    {modal && <BannerFormModal key={modal.editing?.id ?? "new"} opened editing={modal.editing} onClose={() => setModal(null)} onSave={(banner) => { saveBanner(banner); setModal(null); notifications.show({ color: "teal", title: "Banner saved", message: "Preview carousel sudah diperbarui." }); }} />}
+    {modal && <BannerFormModal key={modal.editing?.id ?? "new"} opened editing={modal.editing} onClose={() => setModal(null)} onSave={(banner) => { saveBanner(banner); setModal(null); notifications.show({ color: "teal", title: "Banner disimpan", message: "Preview carousel sudah diperbarui." }); }} />}
   </>;
 }

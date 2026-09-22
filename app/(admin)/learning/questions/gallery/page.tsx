@@ -109,22 +109,22 @@ export default function QuestionImageGalleryPage() {
   const totalPages = Math.max(1, Math.ceil(gallery.total / gallery.page_size));
 
   return <>
-    <PageHeader eyebrow="Learning tools" title="Question image gallery" description="Review every extracted image, then crop or replace images while their questions are still in review." />
+    <PageHeader eyebrow="Tools pembelajaran" title="Galeri gambar soal" description="Tinjau seluruh gambar hasil ekstraksi, lalu crop atau ganti gambar selama soal masih dalam tahap review." />
     <QuestionExtractorNav active="gallery" />
 
     <Card className="surface-card" p={0}>
       <Group justify="space-between" align="flex-end" p="lg" gap="md">
         <Box>
-          <Title order={2} className="section-title">Extracted images</Title>
-          <Text size="sm" c="dimmed" mt={4}>Synced question images remain available for preview and copying, but cannot be edited.</Text>
+          <Title order={2} className="section-title">Gambar hasil ekstraksi</Title>
+          <Text size="sm" c="dimmed" mt={4}>Gambar soal yang sudah synced tetap dapat dilihat dan disalin, tetapi tidak dapat diedit.</Text>
         </Box>
         <Group align="flex-end" gap="sm" className="gallery-filter-group">
-          <TextInput label="Search images" placeholder="Question code…" leftSection={<IconSearch size={16}/>} value={search}
+          <TextInput label="Cari gambar" placeholder="Kode soal…" leftSection={<IconSearch size={16}/>} value={search}
             onChange={(event) => { setSearch(event.currentTarget.value); setPage(1); }} />
           <Select label="Status" data={STATUS_OPTIONS} value={status} allowDeselect={false}
             onChange={(value) => { setStatus(value ?? "all"); setPage(1); }} />
-          <ActionIcon variant="light" color="dark" size={36} aria-label="Refresh gallery" title="Refresh gallery"
-            onClick={() => { setLoading(true); void loadGallery().catch((error) => notifications.show({ color: "red", message: error instanceof Error ? error.message : "Try again." })).finally(() => setLoading(false)); }}>
+          <ActionIcon variant="light" color="dark" size={36} aria-label="Muat ulang galeri" title="Muat ulang galeri"
+            onClick={() => { setLoading(true); void loadGallery().catch((error) => notifications.show({ color: "red", message: error instanceof Error ? error.message : "Coba lagi." })).finally(() => setLoading(false)); }}>
             <IconRefresh size={18}/>
           </ActionIcon>
         </Group>
@@ -145,13 +145,13 @@ export default function QuestionImageGalleryPage() {
           </UnstyledButton>)}
         </SimpleGrid>
         <Group className="pagination-bar" justify="space-between" p="md">
-          <Text size="sm" c="dimmed">Showing {(page - 1) * gallery.page_size + 1}–{Math.min(page * gallery.page_size, gallery.total)} of {gallery.total} images</Text>
+          <Text size="sm" c="dimmed">Menampilkan {(page - 1) * gallery.page_size + 1}–{Math.min(page * gallery.page_size, gallery.total)} dari {gallery.total} gambar</Text>
           <Pagination total={totalPages} value={page} onChange={setPage} color="dark" />
         </Group>
-      </> : <Center mih={360}><Stack align="center" gap="xs"><ThemeIcon size={52} radius="xl" color="gray" variant="light"><IconPhoto size={25}/></ThemeIcon><Text fw={700}>{search || status !== "all" ? "No images match these filters" : "No extracted images yet"}</Text><Text size="sm" c="dimmed">{search || status !== "all" ? "Clear the search or choose another status." : "Images will appear here after a question extraction produces them."}</Text></Stack></Center>}
+      </> : <Center mih={360}><Stack align="center" gap="xs"><ThemeIcon size={52} radius="xl" color="gray" variant="light"><IconPhoto size={25}/></ThemeIcon><Text fw={700}>{search || status !== "all" ? "Tidak ada gambar yang sesuai filter" : "Belum ada gambar hasil ekstraksi"}</Text><Text size="sm" c="dimmed">{search || status !== "all" ? "Hapus pencarian atau pilih status lain." : "Gambar akan muncul setelah proses ekstraksi soal selesai."}</Text></Stack></Center>}
     </Card>
 
-    <Modal opened={Boolean(selected)} onClose={() => !busy && setSelected(null)} title={selected ? `${selected.editable ? "Edit image" : "Image preview"} · ${selected.code}` : "Image preview"} size="xl" centered closeOnClickOutside={!busy}>
+    <Modal opened={Boolean(selected)} onClose={() => !busy && setSelected(null)} title={selected ? `${selected.editable ? "Edit gambar" : "Preview gambar"} · ${selected.code}` : "Preview gambar"} size="xl" centered closeOnClickOutside={!busy}>
       {selected && <Stack gap="lg">
         <Group justify="space-between" align="flex-start">
           <Box><Group gap="xs"><Badge color={statusColor(selected.status)} variant="light">{selected.status}</Badge>{selected.subject && <Badge color="gray" variant="outline">{selected.subject}</Badge>}</Group><Text size="sm" c="dimmed" mt={7}>{selected.source_file_name || "Extracted question image"}</Text></Box>
@@ -162,12 +162,12 @@ export default function QuestionImageGalleryPage() {
           ? <StagedImageEditor key={selected.image_url} url={selected.image_url} busy={busy} onCrop={cropImage}/>
           : <><Image src={selected.image_url} alt={`Extracted figure for ${selected.code}`} fit="contain" mah="65vh" radius="md" className="question-gallery-modal-image"/><Alert color={selected.status === "synced" ? "teal" : "yellow"} variant="light" icon={selected.status === "synced" ? <IconLock size={18}/> : <IconAlertCircle size={18}/>} title={selected.status === "synced" ? "Synced question" : "Image editing unavailable"}>{selected.status === "synced" ? "This image has been published to the question bank and is read-only." : "Wait until extraction finishes before editing this image."}</Alert></>}
 
-        {selected.editable && <><Divider/><input ref={replaceImageRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void replaceImage(file); }}/><Group justify="space-between" gap="sm"><Group gap="xs"><Button variant="light" disabled={busy} leftSection={<IconPhoto size={17}/>} onClick={() => replaceImageRef.current?.click()}>Replace image</Button><Button variant="subtle" disabled={busy} leftSection={<IconCopy size={16}/>} onClick={() => void navigator.clipboard.writeText(selected.image_url).then(() => notifications.show({ color: "teal", message: "Image link copied." }))}>Copy link</Button></Group><Button variant="light" color="red" disabled={busy} leftSection={<IconTrash size={16}/>} onClick={() => setConfirmRemove(true)}>Remove image</Button></Group></>}
+        {selected.editable && <><Divider/><input ref={replaceImageRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void replaceImage(file); }}/><Group justify="space-between" gap="sm"><Group gap="xs"><Button variant="light" disabled={busy} leftSection={<IconPhoto size={17}/>} onClick={() => replaceImageRef.current?.click()}>Ganti gambar</Button><Button variant="subtle" disabled={busy} leftSection={<IconCopy size={16}/>} onClick={() => void navigator.clipboard.writeText(selected.image_url).then(() => notifications.show({ color: "teal", message: "Link gambar disalin." }))}>Salin link</Button></Group><Button variant="light" color="red" disabled={busy} leftSection={<IconTrash size={16}/>} onClick={() => setConfirmRemove(true)}>Hapus gambar</Button></Group></>}
       </Stack>}
     </Modal>
 
     <Modal opened={confirmRemove} onClose={() => !busy && setConfirmRemove(false)} withCloseButton={!busy} size="sm" centered title={null} closeOnClickOutside={!busy} closeOnEscape={!busy}>
-      <Stack gap="lg" pt="sm"><Group align="flex-start" wrap="nowrap" gap="md"><ThemeIcon size={46} radius="xl" color="red" variant="light"><IconPhoto size={23}/></ThemeIcon><Box flex={1}><Title order={3}>Remove question image?</Title><Text size="sm" c="dimmed" mt={6}>The current image for {selected?.code} will be removed from this draft and disappear from the gallery.</Text></Box></Group><Alert color="red" variant="light" icon={<IconAlertCircle size={18}/>}>This action cannot be undone. You can upload another image from the question detail later.</Alert><Group justify="flex-end"><Button variant="subtle" color="gray" disabled={busy} onClick={() => setConfirmRemove(false)}>Cancel</Button><Button color="red" loading={busy} leftSection={<IconTrash size={16}/>} onClick={() => void removeImage()}>Remove image</Button></Group></Stack>
+      <Stack gap="lg" pt="sm"><Group align="flex-start" wrap="nowrap" gap="md"><ThemeIcon size={46} radius="xl" color="red" variant="light"><IconPhoto size={23}/></ThemeIcon><Box flex={1}><Title order={3}>Hapus gambar soal?</Title><Text size="sm" c="dimmed" mt={6}>Gambar saat ini untuk {selected?.code} akan dihapus dari draft dan tidak lagi muncul di galeri.</Text></Box></Group><Alert color="red" variant="light" icon={<IconAlertCircle size={18}/>}>Tindakan ini tidak dapat dibatalkan. Gambar lain dapat di-upload kembali dari detail soal.</Alert><Group justify="flex-end"><Button variant="subtle" color="gray" disabled={busy} onClick={() => setConfirmRemove(false)}>Batal</Button><Button color="red" loading={busy} leftSection={<IconTrash size={16}/>} onClick={() => void removeImage()}>Hapus gambar</Button></Group></Stack>
     </Modal>
   </>;
 }

@@ -6,8 +6,8 @@ export const formatDate = (value: string) => value === "—" ? value : new Date(
 export const formatMonthYear = (value: string) => new Date(value).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
 export function statusColor(status: string) {
-  if (["Active", "Paid", "Sent"].includes(status)) return "teal";
-  if (["Trial", "Pending", "Scheduled"].includes(status)) return "yellow";
+  if (["Active", "Paid", "Sent", "Done"].includes(status)) return "teal";
+  if (["Trial", "Pending", "Scheduled", "Unpaid"].includes(status)) return "yellow";
   if (["Failed", "Expired"].includes(status)) return "red";
   if (status === "Refunded") return "violet";
   return "gray";

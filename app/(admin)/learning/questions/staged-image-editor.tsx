@@ -34,7 +34,7 @@ export function StagedImageEditor({ url, busy, onCrop }: { url: string; busy: bo
         width: `${(box.x1 - box.x0) * 100}%`, height: `${(box.y1 - box.y0) * 100}%`,
         border: "2px solid #d4a017", background: "rgba(212,160,23,.18)" }} />}
     </div>
-    <Group><Button size="xs" disabled={!canCrop} loading={busy} onClick={async () => { if (box) { await onCrop(box); setStart(null); setEnd(null); } }}>Save crop</Button>
+    <Group><Button size="xs" disabled={!canCrop} loading={busy} onClick={async () => { if (box) { await onCrop(box); setStart(null); setEnd(null); } }}>Simpan crop</Button>
       <Button size="xs" variant="subtle" disabled={!box || busy} onClick={() => { setStart(null); setEnd(null); }}>Clear selection</Button></Group>
   </Stack>;
 }

@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
+import { DatesProvider } from "@mantine/dates";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
+import "@mantine/dates/styles.css";
+import "dayjs/locale/id";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 import { theme } from "@/lib/theme";
@@ -28,10 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="id" className={poppins.variable} suppressHydrationWarning>
       <head><ColorSchemeScript defaultColorScheme="light" /></head>
       <body suppressHydrationWarning>
-        <MantineProvider theme={theme} defaultColorScheme="light">
-          <Notifications position="top-right" />
-          {children}
-        </MantineProvider>
+        <MantineProvider theme={theme} defaultColorScheme="light"><DatesProvider settings={{ locale: "id", firstDayOfWeek: 1, weekendDays: [0, 6] }}><Notifications position="top-right" />{children}</DatesProvider></MantineProvider>
       </body>
     </html>
   );

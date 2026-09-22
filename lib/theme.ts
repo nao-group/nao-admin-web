@@ -35,5 +35,21 @@ export const theme = createTheme({
     TextInput: { defaultProps: { radius: "md" } },
     Select: { defaultProps: { radius: "md" } },
     PasswordInput: { defaultProps: { radius: "md" } },
+    DateTimePicker: {
+      defaultProps: {
+        radius: "md",
+        size: "xs",
+        locale: "id",
+        popoverProps: { withinPortal: true, position: "bottom-end" },
+      },
+    },
+    DatePickerInput: {
+      defaultProps: {
+        radius: "md",
+        size: "xs",
+        locale: "id",
+        popoverProps: { withinPortal: true, position: "bottom-end" },
+      },
+    },
   },
 });

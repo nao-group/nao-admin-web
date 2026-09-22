@@ -93,7 +93,7 @@ export function ProviderSettingsModal({ opened, onClose, onSaved }: {
           </Card>;
         })}
       </SimpleGrid>
-      <Group justify="flex-end"><Button variant="default" onClick={onClose}>Cancel</Button><Button color="dark" loading={loading} onClick={() => void save()}>Save settings</Button></Group>
+      <Group justify="flex-end"><Button variant="default" onClick={onClose}>Batal</Button><Button color="dark" loading={loading} onClick={() => void save()}>Simpan pengaturan</Button></Group>
     </Stack>
   </Modal>;
 }
