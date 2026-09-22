@@ -28,11 +28,11 @@ export const initialExpenses: Expense[] = [
 ];
 
 export const initialStaff: Staff[] = [
-  { id: 1, fullName: "Mei Lin Hartanto", email: "meilin@nao.group", phone: "+62 812-3456-7801", role: "Guru", classes: ["Mandarin Anak", "HSK Intensive"], subjects: ["Mandarin", "HSK 4"], bankAccount: "1234567890", bankAccountName: "MEI LIN HARTANTO", bank: "BCA", birthDate: "1994-03-18", photoUrl: "", status: "Active", maritalStatus: "Menikah", city: "Surabaya", hskLevel: "HSK 6", baseSalary: 6500000, allowance: 750000 },
-  { id: 2, fullName: "Rafi Pranata", email: "rafi@nao.group", phone: "+62 811-2233-4012", role: "Guru", classes: ["English Club", "TOEFL Prep"], subjects: ["English", "TOEFL"], bankAccount: "0098123456", bankAccountName: "RAFI PRANATA", bank: "BNI", birthDate: "1997-08-09", photoUrl: "", status: "Active", maritalStatus: "Belum menikah", city: "Bandung", hskLevel: "—", baseSalary: 5750000, allowance: 500000 },
-  { id: 3, fullName: "Sinta Maharani", email: "sinta@nao.group", phone: "+62 813-9087-1122", role: "Karyawan", classes: [], subjects: [], bankAccount: "8810202930", bankAccountName: "SINTA MAHARANI", bank: "BCA", birthDate: "1996-11-21", photoUrl: "", status: "Active", maritalStatus: "Belum menikah", city: "Jakarta", hskLevel: "—", baseSalary: 5800000, allowance: 650000 },
-  { id: 4, fullName: "Andi Wijaya", email: "andi@nao.group", phone: "+62 812-8800-7611", role: "C-Level", classes: [], subjects: [], bankAccount: "1420087711", bankAccountName: "ANDI WIJAYA", bank: "Mandiri", birthDate: "1990-05-03", photoUrl: "", status: "Active", maritalStatus: "Menikah", city: "Jakarta", hskLevel: "HSK 4", baseSalary: 0, allowance: 0 },
-  { id: 5, fullName: "Dian Permata", email: "dian@nao.group", phone: "+62 878-1122-3399", role: "Guru", classes: ["Mandarin Dasar"], subjects: ["Mandarin"], bankAccount: "3210098876", bankAccountName: "DIAN PERMATA", bank: "BRI", birthDate: "1998-01-14", photoUrl: "", status: "Inactive", maritalStatus: "Belum menikah", city: "Malang", hskLevel: "HSK 5", baseSalary: 4800000, allowance: 350000 },
+  { id: 1, fullName: "Mei Lin Hartanto", email: "meilin@nao.group", phone: "+62 812-3456-7801", role: "Guru", classes: ["Mathematics (Chinese)"], bankAccount: "1234567890", bankAccountName: "MEI LIN HARTANTO", bank: "BCA", birthDate: "1994-03-18", joinDate: "2022-07-01", photoUrl: "", status: "Active", maritalStatus: "Menikah", province: "Jawa Timur", hskLevel: "HSK 6", baseSalary: 6500000, allowance: 750000 },
+  { id: 2, fullName: "Rafi Pranata", email: "rafi@nao.group", phone: "+62 811-2233-4012", role: "Guru", classes: ["Mathematics (English)"], bankAccount: "0098123456", bankAccountName: "RAFI PRANATA", bank: "BNI", birthDate: "1997-08-09", joinDate: "2024-01-15", photoUrl: "", status: "Active", maritalStatus: "Belum menikah", province: "Jawa Barat", hskLevel: "—", baseSalary: 5750000, allowance: 500000 },
+  { id: 3, fullName: "Sinta Maharani", email: "sinta@nao.group", phone: "+62 813-9087-1122", role: "Karyawan", classes: [], bankAccount: "8810202930", bankAccountName: "SINTA MAHARANI", bank: "BCA", birthDate: "1996-11-21", joinDate: "2023-03-01", photoUrl: "", status: "Active", maritalStatus: "Belum menikah", province: "DKI Jakarta", hskLevel: "—", baseSalary: 5800000, allowance: 650000 },
+  { id: 4, fullName: "Andi Wijaya", email: "andi@nao.group", phone: "+62 812-8800-7611", role: "C-Level", classes: [], bankAccount: "1420087711", bankAccountName: "ANDI WIJAYA", bank: "Mandiri", birthDate: "1990-05-03", joinDate: "2021-09-01", photoUrl: "", status: "Active", maritalStatus: "Menikah", province: "DKI Jakarta", hskLevel: "—", baseSalary: 0, allowance: 0 },
+  { id: 5, fullName: "Dian Permata", email: "dian@nao.group", phone: "+62 878-1122-3399", role: "Guru", classes: ["STEM Chinese"], bankAccount: "3210098876", bankAccountName: "DIAN PERMATA", bank: "BRI", birthDate: "1998-01-14", joinDate: "2025-02-10", photoUrl: "", status: "Inactive", maritalStatus: "Belum menikah", province: "Jawa Timur", hskLevel: "HSK 5", baseSalary: 4800000, allowance: 350000 },
 ];
 
 export const initialPayrolls: Payroll[] = [
@@ -42,8 +42,8 @@ export const initialPayrolls: Payroll[] = [
 ];
 
 export const initialAutoExpenseRules: AutoExpenseRule[] = [
-  { id: 1, name: "Admin rekening operasional", category: "Biaya admin bank", amount: 10000, dayOfMonth: 1, paidBy: "NAO Group", notes: "Dibuat otomatis setiap awal bulan", active: true },
-  { id: 2, name: "Zoom Business", category: "Maintenance", amount: 349000, dayOfMonth: 3, paidBy: "NAO Group", notes: "Langganan meeting bulanan", active: false },
+  { id: 1, name: "Admin rekening operasional", category: "Biaya admin bank", amount: 10000, frequency: "Bulanan", dayOfWeek: 1, dayOfMonth: 1, monthOfYear: 1, paidBy: "NAO Group", notes: "Dibuat otomatis setiap awal bulan", active: true },
+  { id: 2, name: "Zoom Business", category: "Maintenance", amount: 349000, frequency: "Bulanan", dayOfWeek: 1, dayOfMonth: 3, monthOfYear: 1, paidBy: "NAO Group", notes: "Langganan meeting bulanan", active: false },
 ];
 
 export const cashflowLabels = ["Apr", "Mei", "Jun", "Jul", "Agu", "Sep"];

@@ -91,15 +91,15 @@ export type Staff = {
   phone: string;
   role: StaffRole;
   classes: string[];
-  subjects: string[];
   bankAccount: string;
   bankAccountName: string;
   bank: string;
   birthDate: string;
+  joinDate: string;
   photoUrl: string;
   status: StaffStatus;
   maritalStatus: "Belum menikah" | "Menikah";
-  city: string;
+  province: string;
   hskLevel: string;
   baseSalary: number;
   allowance: number;
@@ -134,7 +134,10 @@ export type AutoExpenseRule = {
   name: string;
   category: ExpenseCategory;
   amount: number;
+  frequency: "Mingguan" | "Bulanan" | "Tahunan";
+  dayOfWeek: number;
   dayOfMonth: number;
+  monthOfYear: number;
   paidBy: string;
   notes: string;
   active: boolean;
