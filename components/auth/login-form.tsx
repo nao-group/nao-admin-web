@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Box, Button, Card, Group, Modal, PasswordInput, Radio, Stack, Text, TextInput, ThemeIcon, Title } from "@mantine/core";
 import { IconCheck, IconDeviceDesktop, IconLogout } from "@tabler/icons-react";
 import { defaultAdminRoute } from "@/lib/admin-access";
@@ -11,7 +10,6 @@ import { useAuthStore } from "@/store/auth";
 import naoFullDark from "@/public/images/logo/nao_full_dark.png";
 
 export function LoginForm() {
-  const router = useRouter();
   const setSession = useAuthStore((state) => state.setSession);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,9 +23,9 @@ export function LoginForm() {
   useEffect(() => {
     getAdminSession().then((session) => {
       setSession(session);
-      router.replace(defaultAdminRoute(session.roles));
+      window.location.replace(defaultAdminRoute(session.roles));
     }).catch(() => undefined);
-  }, [router, setSession]);
+  }, [setSession]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -40,7 +38,7 @@ export function LoginForm() {
     try {
       const session = await loginAdmin(email.trim(), password);
       setSession(session);
-      router.replace(defaultAdminRoute(session.roles));
+      window.location.replace(defaultAdminRoute(session.roles));
     } catch (caught) {
       if (caught instanceof AuthApiError && caught.status === 409) {
         const sessions = Array.isArray(caught.data.sessions) ? caught.data.sessions as MaxDevicesPayload["sessions"] : [];
@@ -69,7 +67,7 @@ export function LoginForm() {
       const session = await revokeAdminDevice(maxDevices.login_token, selectedSession);
       setMaxDevices(null);
       setSession(session);
-      router.replace(defaultAdminRoute(session.roles));
+      window.location.replace(defaultAdminRoute(session.roles));
     } catch (caught) {
       if (caught instanceof AuthApiError && [400, 404].includes(caught.status)) {
         setMaxDevices(null);

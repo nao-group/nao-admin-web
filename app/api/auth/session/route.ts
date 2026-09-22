@@ -7,6 +7,18 @@ import {
   setAccessCookie,
 } from "@/lib/server/admin-session";
 
+export const dynamic = "force-dynamic";
+
+function sessionResponse(body: unknown, status = 200) {
+  return NextResponse.json(body, {
+    status,
+    headers: {
+      "Cache-Control": "private, no-store, max-age=0",
+      Vary: "Cookie",
+    },
+  });
+}
+
 async function fetchProfile(accessToken: string): Promise<Response> {
   return fetch(backendUrl("/api/admin/auth/me"), {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -17,7 +29,7 @@ async function fetchProfile(accessToken: string): Promise<Response> {
 export async function GET() {
   const { accessToken, refreshToken } = await getAdminTokens();
   if (!accessToken && !refreshToken) {
-    return NextResponse.json({ detail: "Not authenticated." }, { status: 401 });
+    return sessionResponse({ detail: "Not authenticated." }, 401);
   }
 
   try {
@@ -36,13 +48,13 @@ export async function GET() {
     const body = await response.json().catch(() => ({ detail: "Invalid session response." }));
     if (!response.ok) {
       await clearAdminCookies();
-      return NextResponse.json(body, { status: response.status });
+      return sessionResponse(body, response.status);
     }
-    return NextResponse.json(body);
+    return sessionResponse(body);
   } catch {
-    return NextResponse.json(
+    return sessionResponse(
       { detail: "Layanan autentikasi sedang tidak dapat dijangkau." },
-      { status: 502 },
+      502,
     );
   }
 }

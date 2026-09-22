@@ -6,6 +6,15 @@ import {
   type BackendLoginResponse,
 } from "@/lib/server/admin-session";
 
+export const dynamic = "force-dynamic";
+
+function loginResponse(body: unknown, status = 200) {
+  return NextResponse.json(body, {
+    status,
+    headers: { "Cache-Control": "private, no-store, max-age=0" },
+  });
+}
+
 export async function POST(request: Request) {
   const credentials = await request.json().catch(() => null);
   if (
@@ -13,7 +22,7 @@ export async function POST(request: Request) {
     || typeof credentials.email !== "string"
     || typeof credentials.password !== "string"
   ) {
-    return NextResponse.json({ detail: "Email dan password wajib diisi." }, { status: 400 });
+    return loginResponse({ detail: "Email dan password wajib diisi." }, 400);
   }
 
   try {
@@ -29,7 +38,7 @@ export async function POST(request: Request) {
     const body = await response.json().catch(() => ({
       detail: "Layanan login mengembalikan respons yang tidak valid.",
     }));
-    if (!response.ok) return NextResponse.json(body, { status: response.status });
+    if (!response.ok) return loginResponse(body, response.status);
 
     const session = body as BackendLoginResponse;
     await setAdminCookies(session);
@@ -38,11 +47,11 @@ export async function POST(request: Request) {
       roles: session.roles,
       permissions: session.permissions,
     };
-    return NextResponse.json(safeSession);
+    return loginResponse(safeSession);
   } catch {
-    return NextResponse.json(
+    return loginResponse(
       { detail: "Layanan login sedang tidak dapat dijangkau." },
-      { status: 502 },
+      502,
     );
   }
 }

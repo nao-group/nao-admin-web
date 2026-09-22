@@ -61,25 +61,27 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         const canOpenRoute = NAV_ITEMS.some(
           (item) => pathname.startsWith(item.href) && hasAnyRole(verifiedSession.roles, item.roles),
         );
-        if (!canOpenRoute) router.replace(defaultAdminRoute(verifiedSession.roles));
+        if (!canOpenRoute) window.location.replace(defaultAdminRoute(verifiedSession.roles));
       })
       .catch(() => {
         if (!active) return;
         clearSession();
-        router.replace("/login");
+        window.location.replace("/login");
       })
       .finally(() => {
         if (active) setCheckingSession(false);
       });
     return () => { active = false; };
-  }, [clearSession, pathname, router, setSession]);
+  }, [clearSession, pathname, setSession]);
 
   if (checkingSession || !session) {
     return <Center mih="100vh"><Loader color="yellow" aria-label="Memeriksa sesi admin" /></Center>;
   }
 
   const canOpenCurrentRoute = visibleItems.some((item) => pathname.startsWith(item.href));
-  if (!canOpenCurrentRoute) return null;
+  if (!canOpenCurrentRoute) {
+    return <Center mih="100vh"><Loader color="yellow" aria-label="Mengalihkan ke halaman yang dapat diakses" /></Center>;
+  }
 
   const isActive = (href: string) => href === "/finance" ? pathname === href : pathname.startsWith(href);
   const current = [...visibleItems].sort((a, b) => b.href.length - a.href.length).find((item) => isActive(item.href));
