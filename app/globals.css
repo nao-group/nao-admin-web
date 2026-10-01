@@ -148,7 +148,7 @@ button, [role="button"] { cursor: pointer; }
 .banner-redirect-value { max-width: 58%; }
 .banner-thumb { display: grid; aspect-ratio: 10 / 3; min-height: 116px; place-items: center; overflow: hidden; color: #8a7350; background: radial-gradient(circle at 75% 20%,rgba(212,160,23,.2),transparent 35%),#edf0f2; }
 .schedule-block { padding: 12px 13px; border: 1px solid rgba(15,23,42,.07); border-radius: 11px; background: #f8f6f0; }
-.upload-preview-frame { display: grid; width: 100%; aspect-ratio: 10 / 3; min-height: 150px; place-items: center; overflow: hidden; border: 1px dashed rgba(167,121,5,.44); border-radius: 14px; color: #8b7c5e; background: #faf7ef; }
+.upload-preview-frame { display: grid; width: 100%; aspect-ratio: 10 / 3; place-items: center; overflow: hidden; border: 1px dashed rgba(167,121,5,.44); border-radius: 14px; color: #8b7c5e; background: #faf7ef; }
 .upload-preview-frame img { width: 100%; height: 100%; object-fit: cover; }
 .banner-empty { display: grid; min-height: 220px; place-items: center; border: 1px dashed #d7dce2; border-radius: 17px; color: #77808c; background: #f8f8f5; text-align: center; }
 .extractor-top-grid { align-items: start; }
