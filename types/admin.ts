@@ -25,10 +25,12 @@ export type Referral = {
   id: number;
   code: string;
   owner: string;
+  discountType: "Fixed" | "Percentage";
   discount: number;
   uses: number;
-  limit: number;
-  status: "Active" | "Paused" | "Expired";
+  limit: number | null;
+  status: "Active" | "Scheduled" | "Expired";
+  startsAt: string;
   expiresAt: string;
 };
 
