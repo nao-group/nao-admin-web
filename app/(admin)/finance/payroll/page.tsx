@@ -1,28 +1,215 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Avatar, Badge, Box, Button, Card, Divider, Group, Menu, Modal, NumberInput, Select, SimpleGrid, Stack, Table, Text, UnstyledButton } from "@mantine/core";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ActionIcon, Badge, Box, Button, Card, Group, Menu, Modal, NumberInput, ScrollArea, Select, SimpleGrid,
+  Skeleton, Stack, Table, Text, Textarea, TextInput, UnstyledButton,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconChevronDown, IconDownload, IconEye, IconFileInvoice, IconMail, IconSend } from "@tabler/icons-react";
+import {
+  IconCheck, IconChevronDown, IconClockDollar, IconDotsVertical, IconEdit, IconMailForward,
+  IconPlus, IconReceipt2, IconWallet,
+} from "@tabler/icons-react";
 import { MetricCard, PageHeader } from "@/components/ui/admin";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { useAdminStore } from "@/store/admin";
-import type { Payroll } from "@/types/admin";
-import { initials } from "../utils";
+import { formatCurrency } from "@/lib/format";
+import { primaryRole } from "@/lib/admin-access";
+import { useAuthStore } from "@/store/auth";
+import {
+  createPayroll, getPayrollOverview, listPayroll, listStaffOptions, payslipViewUrl, resendPayslip,
+  updatePayroll, updatePayrollStatus,
+} from "./api";
+import type { PayrollOverview, PayrollRow, PayrollStatus, PayrollWritePayload, StaffOption } from "./types";
+
+const PAGE_SIZE = 50;
+const STATUS_OPTIONS: PayrollStatus[] = ["pending", "done"];
+const STATUS_LABELS: Record<PayrollStatus, string> = { pending: "Pending", done: "Done" };
+
+const currentPeriod = () => new Date().toISOString().slice(0, 7);
+
+const blankForm = (): PayrollWritePayload => ({
+  staff_id: 0, period: currentPeriod(), base_salary: 0, allowance: 0, reimbursement: 0, admin_fee: 0, notes: "",
+});
 
 export default function PayrollPage() {
-  const payrolls = useAdminStore((state) => state.payrolls);
-  const staff = useAdminStore((state) => state.staff);
-  const save = useAdminStore((state) => state.savePayroll);
-  const [period, setPeriod] = useState("2026-09");
-  const [selected, setSelected] = useState<Payroll | null>(null);
-  const rows = useMemo(() => payrolls.filter((item) => item.period === period).map((item) => ({ ...item, person: staff.find((person) => person.id === item.staffId) })).filter((item) => item.person), [payrolls, period, staff]);
-  const total = rows.reduce((sum, item) => sum + item.totalTransfer, 0);
-  const pending = rows.filter((item) => item.status === "Pending").reduce((sum, item) => sum + item.totalTransfer, 0);
-  const updateReimbursement = (value: number) => { if (!selected) return; setSelected({ ...selected, reimbursement: value, totalTransfer: selected.baseSalary + selected.allowance + value - selected.adminFee }); };
-  const updateStatus = (item: Payroll, status: Payroll["status"]) => { const updated: Payroll = { ...item, status, sentAt: status === "Done" ? item.sentAt || new Date().toISOString() : "" }; save(updated); setSelected((current) => current?.id === item.id ? updated : current); notifications.show({ color: status === "Done" ? "teal" : "yellow", title: status === "Done" ? "Payroll selesai" : "Payroll dibuka kembali", message: status === "Done" ? "Status diubah menjadi done dan slip gaji masuk antrean email." : "Status diubah kembali menjadi pending." }); };
-  const statusMenu = (item: Payroll) => <Menu position="bottom-end" withinPortal><Menu.Target><UnstyledButton className="report-status-trigger" aria-label={`Ubah status payroll ${item.id}`}><Badge color={item.status === "Done" ? "teal" : "yellow"} variant="light" leftSection={<span className="status-dot" />} rightSection={<IconChevronDown size={12} />} className="report-status-badge">{item.status}</Badge></UnstyledButton></Menu.Target><Menu.Dropdown>{(["Pending", "Done"] as Payroll["status"][]).map((option) => <Menu.Item key={option} disabled={option === item.status} leftSection={<span className="status-option-dot" style={{ background: `var(--mantine-color-${option === "Done" ? "teal" : "yellow"}-6)` }} />} onClick={() => updateStatus(item, option)}>{option}</Menu.Item>)}</Menu.Dropdown></Menu>;
-  const person = selected ? staff.find((item) => item.id === selected.staffId) : undefined;
+  const session = useAuthStore((state) => state.session);
+  const canWrite = session ? primaryRole(session.roles) === "superadmin" : false;
 
-  return <><PageHeader eyebrow="Finance · Payroll" title="Payroll & slip gaji" description="Finalisasi gaji bulanan dan siapkan satu PDF slip gaji untuk setiap penerima." action={<Group><Select aria-label="Periode payroll" value={period} onChange={(value) => setPeriod(value ?? "2026-09")} data={[{ value: "2026-09", label: "September 2026" }, { value: "2026-08", label: "Agustus 2026" }]} /><Button className="primary-action" leftSection={<IconFileInvoice size={17} />}>Buat payroll</Button></Group>} /><SimpleGrid cols={{ base: 1, xs: 2, xl: 4 }} mb="lg"><MetricCard label="Total payroll" value={formatCurrency(total)} delta={`${rows.length} penerima`} icon={IconFileInvoice} tone="gold" /><MetricCard label="Sudah ditransfer" value={formatCurrency(total - pending)} delta={`${rows.filter((item) => item.status === "Done").length} selesai`} icon={IconCheck} tone="green" /><MetricCard label="Menunggu transfer" value={formatCurrency(pending)} delta={`${rows.filter((item) => item.status === "Pending").length} pending`} icon={IconSend} tone="purple" /><MetricCard label="Slip terkirim" value={String(rows.filter((item) => item.sentAt).length)} delta="PDF via email" icon={IconMail} /></SimpleGrid><Card className="surface-card table-card" p={0}><Group p="lg" justify="space-between"><Box><Text className="section-title">Payroll September 2026</Text><Text size="xs" c="dimmed">Non-BCA menanggung biaya admin transfer Rp2.500</Text></Box><Badge color="blue" variant="light">Email & PDF siap integrasi API</Badge></Group><Table verticalSpacing="lg" horizontalSpacing="lg"><Table.Thead><Table.Tr><Table.Th>Penerima</Table.Th><Table.Th>Rekening</Table.Th><Table.Th>Gaji + tunjangan</Table.Th><Table.Th>Reimbursement</Table.Th><Table.Th>Admin fee</Table.Th><Table.Th>Total transfer</Table.Th><Table.Th>Status</Table.Th><Table.Th /></Table.Tr></Table.Thead><Table.Tbody>{rows.map((item) => <Table.Tr key={item.id}><Table.Td><Group gap="sm"><Avatar color="yellow" radius="xl">{initials(item.person!.fullName)}</Avatar><Box><Text size="sm" fw={600}>{item.person!.fullName}</Text><Text size="xs" c="dimmed">{item.person!.email}</Text></Box></Group></Table.Td><Table.Td><Text size="sm" fw={600}>{item.person!.bank}</Text><Text size="xs" c="dimmed">•••• {item.person!.bankAccount.slice(-4)}</Text></Table.Td><Table.Td>{formatCurrency(item.baseSalary + item.allowance)}</Table.Td><Table.Td>{formatCurrency(item.reimbursement)}</Table.Td><Table.Td c={item.adminFee ? "red.7" : "dimmed"}>-{formatCurrency(item.adminFee)}</Table.Td><Table.Td fw={700}>{formatCurrency(item.totalTransfer)}</Table.Td><Table.Td>{statusMenu(item)}</Table.Td><Table.Td><Button size="xs" variant="subtle" color="dark" leftSection={<IconEye size={15} />} onClick={() => setSelected({ ...item })}>Slip gaji</Button></Table.Td></Table.Tr>)}</Table.Tbody></Table></Card><Modal opened={Boolean(selected && person)} onClose={() => setSelected(null)} size="lg" centered title={<Text className="section-title">Slip gaji</Text>}>{selected && person && <Stack><Card className="salary-slip" p="xl"><Group justify="space-between" align="flex-start"><Box><Text className="eyebrow">NAO GROUP</Text><Text fz={24} fw={700}>Slip Gaji</Text><Text size="sm" c="dimmed">Periode {new Date(`${selected.period}-01T12:00:00`).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}</Text></Box>{statusMenu(selected)}</Group><Divider my="lg" /><SimpleGrid cols={2} mb="lg"><Box><Text size="xs" c="dimmed">Nama penerima</Text><Text fw={700}>{person.fullName}</Text><Text size="sm">{person.email}</Text></Box><Box><Text size="xs" c="dimmed">Rekening</Text><Text fw={700}>{person.bank} · {person.bankAccount}</Text><Text size="sm">a.n. {person.bankAccountName}</Text></Box></SimpleGrid><Stack gap="xs"><Group justify="space-between"><Text size="sm">Gaji pokok</Text><Text fw={600}>{formatCurrency(selected.baseSalary)}</Text></Group><Group justify="space-between"><Text size="sm">Tunjangan</Text><Text fw={600}>{formatCurrency(selected.allowance)}</Text></Group><Group justify="space-between" align="flex-start"><NumberInput label="Reimbursement" variant="unstyled" hideControls value={selected.reimbursement} disabled={selected.status === "Done"} onChange={(value) => updateReimbursement(Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," styles={{ input: { fontWeight: 600, padding: 0, height: 24 } }} /><Text fw={600} mt={3}>{formatCurrency(selected.reimbursement)}</Text></Group><Group justify="space-between"><Text size="sm">Biaya admin transfer {person.bank === "BCA" ? "(BCA)" : "(non-BCA)"}</Text><Text fw={600} c={selected.adminFee ? "red.7" : undefined}>-{formatCurrency(selected.adminFee)}</Text></Group><Divider /><Group justify="space-between"><Text fw={700}>Total transfer</Text><Text fz={22} fw={700} c="teal.8">{formatCurrency(selected.totalTransfer)}</Text></Group></Stack>{selected.sentAt && <Text size="xs" c="dimmed" mt="lg">Slip dikirim {formatDate(selected.sentAt)} ke {person.email}</Text>}</Card><Group justify="space-between"><Button variant="light" color="dark" leftSection={<IconDownload size={16} />} onClick={() => window.print()}>Cetak / Save PDF</Button><Group><Button variant="subtle" color="gray" onClick={() => setSelected(null)}>Tutup</Button>{selected.status === "Pending" ? <Button className="primary-action" leftSection={<IconSend size={16} />} onClick={() => updateStatus(selected, "Done")}>Tandai done & kirim</Button> : <Button variant="light" color="teal" leftSection={<IconMail size={16} />} onClick={() => notifications.show({ color: "teal", message: `Slip gaji dikirim ulang ke ${person.email}.` })}>Kirim ulang email</Button>}</Group></Group></Stack>}</Modal></>;
+  const [items, setItems] = useState<PayrollRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [listLoading, setListLoading] = useState(true);
+  const [overview, setOverview] = useState<PayrollOverview | null>(null);
+  const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
+
+  const [periodFilter, setPeriodFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<PayrollStatus | null>(null);
+  const [query, setQuery] = useState("");
+
+  const [editing, setEditing] = useState<PayrollRow | null | undefined>(undefined);
+  const [form, setForm] = useState<PayrollWritePayload>(blankForm());
+
+  const filterParams = useMemo(() => ({
+    page: 1, page_size: PAGE_SIZE, period: periodFilter || undefined, status: statusFilter, search: query,
+  }), [periodFilter, statusFilter, query]);
+
+  const refresh = () => {
+    setListLoading(true);
+    void listPayroll(filterParams).then((r) => { setItems(r.items); setTotal(r.total); }).catch(() => { setItems([]); setTotal(0); }).finally(() => setListLoading(false));
+    void getPayrollOverview().then(setOverview).catch(() => setOverview(null));
+  };
+
+  useEffect(() => {
+    const timer = window.setTimeout(refresh, 250);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterParams]);
+
+  useEffect(() => {
+    void listStaffOptions().then(setStaffOptions).catch(() => setStaffOptions([]));
+  }, []);
+
+  const open = (item?: PayrollRow) => {
+    setForm(item ? {
+      staff_id: item.staff_id, period: item.period, base_salary: item.base_salary, allowance: item.allowance,
+      reimbursement: item.reimbursement, admin_fee: item.admin_fee, notes: item.notes ?? "",
+    } : blankForm());
+    setEditing(item ?? null);
+  };
+  const update = <K extends keyof PayrollWritePayload>(key: K, value: PayrollWritePayload[K]) =>
+    setForm((current) => ({ ...current, [key]: value }));
+
+  const pickStaff = (staffId: number) => {
+    const staff = staffOptions.find((s) => s.id === staffId);
+    setForm((current) => ({
+      ...current, staff_id: staffId,
+      base_salary: staff ? staff.base_salary : current.base_salary,
+      allowance: staff ? staff.allowance : current.allowance,
+    }));
+  };
+
+  const totalTransfer = Math.max(0, form.base_salary + form.allowance + form.reimbursement - form.admin_fee);
+
+  const submit = async () => {
+    if (!form.staff_id || !form.period || form.base_salary <= 0) {
+      notifications.show({ color: "red", message: "Staff, periode, dan gaji pokok wajib diisi." });
+      return;
+    }
+    try {
+      if (editing) await updatePayroll(editing.id, form); else await createPayroll(form);
+      setEditing(undefined);
+      notifications.show({ color: "teal", message: "Payroll berhasil disimpan." });
+      refresh();
+    } catch (error) {
+      notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menyimpan payroll." });
+    }
+  };
+
+  const changeStatus = async (item: PayrollRow, status: PayrollStatus) => {
+    try {
+      await updatePayrollStatus(item.id, status);
+      notifications.show({
+        color: status === "done" ? "teal" : "yellow",
+        message: status === "done" ? `${item.staff.full_name} ditandai Done — slip gaji sedang dikirim via email.` : `${item.staff.full_name} diubah menjadi Pending.`,
+      });
+      refresh();
+    } catch (error) {
+      notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal mengubah status." });
+    }
+  };
+
+  const resend = async (item: PayrollRow) => {
+    try {
+      await resendPayslip(item.id);
+      notifications.show({ color: "teal", message: `Slip gaji ${item.staff.full_name} dikirim ulang ke ${item.staff.email ?? "email terdaftar"}.` });
+      refresh();
+    } catch (error) {
+      notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal mengirim ulang slip gaji." });
+    }
+  };
+
+  const statusMenu = (item: PayrollRow) => {
+    const badge = <Badge color={item.status === "done" ? "teal" : "yellow"} variant="light" leftSection={<span className="status-dot" />} rightSection={canWrite ? <IconChevronDown size={12} /> : undefined} className="report-status-badge">{STATUS_LABELS[item.status]}</Badge>;
+    if (!canWrite) return badge;
+    return <Menu position="bottom-end" withinPortal>
+      <Menu.Target><UnstyledButton className="report-status-trigger" aria-label={`Ubah status ${item.staff.full_name}`}>{badge}</UnstyledButton></Menu.Target>
+      <Menu.Dropdown>{STATUS_OPTIONS.map((option) => <Menu.Item key={option} disabled={option === item.status} leftSection={<span className="status-option-dot" style={{ background: `var(--mantine-color-${option === "done" ? "teal" : "yellow"}-6)` }} />} onClick={() => changeStatus(item, option)}>{STATUS_LABELS[option]}</Menu.Item>)}</Menu.Dropdown>
+    </Menu>;
+  };
+
+  return <>
+    <PageHeader eyebrow="Finance · Payroll" title="Payroll & Slip Gaji" description="Kelola gaji, reimbursement, dan biaya admin transfer karyawan setiap periode."
+      action={canWrite && <Button className="primary-action" leftSection={<IconPlus size={16} />} onClick={() => open()}>Tambah payroll</Button>} />
+
+    <SimpleGrid cols={{ base: 1, xs: 2, xl: 4 }} mb="lg">
+      {!overview ? Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} height={110} radius="md" />) : <>
+        <MetricCard label="Total payroll" value={formatCurrency(overview.total_payroll)} icon={IconWallet} tone="gold" />
+        <MetricCard label="Sudah ditransfer" value={formatCurrency(overview.transferred)} icon={IconCheck} tone="green" />
+        <MetricCard label="Masih menunggu" value={formatCurrency(overview.still_waiting)} icon={IconClockDollar} />
+        <MetricCard label="Slip gaji terkirim" value={String(overview.payslips_sent)} icon={IconMailForward} tone="purple" />
+      </>}
+    </SimpleGrid>
+
+    <Card className="surface-card filter-card" p="lg" mb="lg">
+      <Group align="flex-end" wrap="wrap">
+        <TextInput label="Cari" placeholder="Nama staff" value={query} onChange={(event) => setQuery(event.currentTarget.value)} flex={1} miw={200} />
+        <TextInput type="month" label="Periode" value={periodFilter} onChange={(event) => setPeriodFilter(event.currentTarget.value)} w={170} />
+        <Select label="Status" value={statusFilter} onChange={(value) => setStatusFilter(value as PayrollStatus | null)} data={[{ value: "", label: "Semua status" }, ...STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABELS[s] }))]} clearable w={150} />
+      </Group>
+    </Card>
+
+    <Card className="surface-card table-card" p={0}>
+      <Group p="lg" justify="space-between"><Box><Text className="section-title">Daftar payroll</Text><Text size="xs" c="dimmed">{total} pencatatan</Text></Box></Group>
+      <ScrollArea>
+        <Table miw={1180} verticalSpacing="md" horizontalSpacing="lg" highlightOnHover>
+          <Table.Thead><Table.Tr><Table.Th>Staff</Table.Th><Table.Th>Periode</Table.Th><Table.Th>Gaji pokok</Table.Th><Table.Th>Tunjangan</Table.Th><Table.Th>Reimbursement</Table.Th><Table.Th>Biaya admin</Table.Th><Table.Th>Total transfer</Table.Th><Table.Th>Status</Table.Th><Table.Th>Slip gaji</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+          <Table.Tbody>
+            {listLoading && Array.from({ length: 5 }).map((_, index) => <Table.Tr key={index}><Table.Td colSpan={10}><Skeleton height={20} radius="sm" /></Table.Td></Table.Tr>)}
+            {!listLoading && items.map((item) => {
+              const editable = canWrite && item.status === "pending";
+              return <Table.Tr key={item.id}>
+                <Table.Td><Text size="sm" fw={600}>{item.staff.full_name}</Text><Text size="xs" c="dimmed">{item.staff.role_label}</Text></Table.Td>
+                <Table.Td>{item.period}</Table.Td>
+                <Table.Td>{formatCurrency(item.base_salary)}</Table.Td>
+                <Table.Td>{formatCurrency(item.allowance)}</Table.Td>
+                <Table.Td>{formatCurrency(item.reimbursement)}</Table.Td>
+                <Table.Td c={item.admin_fee ? "red.7" : "dimmed"}>-{formatCurrency(item.admin_fee)}</Table.Td>
+                <Table.Td fw={700}>{formatCurrency(item.total_transfer)}</Table.Td>
+                <Table.Td>{statusMenu(item)}</Table.Td>
+                <Table.Td>{item.payslip_sent_at ? <Badge size="xs" color="teal" variant="light">Terkirim</Badge> : <Badge size="xs" color="gray" variant="light">Belum</Badge>}</Table.Td>
+                <Table.Td>
+                  <Menu position="bottom-end">
+                    <Menu.Target><ActionIcon variant="subtle" color="gray" aria-label={`Aksi ${item.staff.full_name}`}><IconDotsVertical size={17} /></ActionIcon></Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item component="a" href={payslipViewUrl(item.id)} target="_blank" rel="noreferrer" leftSection={<IconReceipt2 size={15} />}>Lihat slip gaji</Menu.Item>
+                      {canWrite && <Menu.Item leftSection={<IconMailForward size={15} />} onClick={() => resend(item)}>Kirim ulang slip gaji</Menu.Item>}
+                      {editable && <Menu.Item leftSection={<IconEdit size={15} />} onClick={() => open(item)}>Edit</Menu.Item>}
+                    </Menu.Dropdown>
+                  </Menu>
+                </Table.Td>
+              </Table.Tr>;
+            })}
+            {!listLoading && !items.length && <Table.Tr><Table.Td colSpan={10}><Text size="sm" c="dimmed" ta="center" py="md">Belum ada payroll yang sesuai filter.</Text></Table.Td></Table.Tr>}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
+    </Card>
+
+    <Modal opened={editing !== undefined} onClose={() => setEditing(undefined)} size="lg" centered title={<Text className="section-title">{editing ? "Edit payroll" : "Tambah payroll"}</Text>}>
+      <Stack>
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <Select label="Staff" required searchable value={form.staff_id ? String(form.staff_id) : null} onChange={(value) => pickStaff(Number(value) || 0)} data={staffOptions.map((s) => ({ value: String(s.id), label: `${s.full_name} — ${s.role_label}` }))} />
+          <TextInput type="month" label="Periode" required value={form.period} onChange={(event) => update("period", event.currentTarget.value)} />
+          <NumberInput label="Gaji pokok" required min={0} value={form.base_salary} onChange={(value) => update("base_salary", Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," />
+          <NumberInput label="Tunjangan" min={0} value={form.allowance} onChange={(value) => update("allowance", Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," />
+          <NumberInput label="Reimbursement" min={0} value={form.reimbursement} onChange={(value) => update("reimbursement", Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," />
+          <NumberInput label="Biaya admin transfer" min={0} value={form.admin_fee} onChange={(value) => update("admin_fee", Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," />
+        </SimpleGrid>
+        <Card withBorder radius="md" p="md"><Group justify="space-between"><Text size="sm" c="dimmed">Total transfer</Text><Text fw={700} size="lg">{formatCurrency(totalTransfer)}</Text></Group></Card>
+        <Textarea label="Catatan" minRows={3} value={form.notes ?? ""} onChange={(event) => update("notes", event.currentTarget.value)} />
+        <Group justify="flex-end">
+          <Button variant="subtle" color="gray" onClick={() => setEditing(undefined)}>Batal</Button>
+          <Button className="primary-action" leftSection={<IconCheck size={16} />} onClick={submit}>Simpan payroll</Button>
+        </Group>
+      </Stack>
+    </Modal>
+  </>;
 }
