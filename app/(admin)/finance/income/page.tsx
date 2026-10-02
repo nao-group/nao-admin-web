@@ -85,6 +85,9 @@ export default function IncomePage() {
   const [feeAdjustTarget, setFeeAdjustTarget] = useState<IncomeRow | null>(null);
   const [feeAdjustValue, setFeeAdjustValue] = useState(0);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savingFee, setSavingFee] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const filterParams = useMemo(() => ({
     search: query, source: sourceFilter, status: statusFilter,
@@ -153,6 +156,7 @@ export default function IncomePage() {
       ...form, custom_source: form.source === "other" ? form.custom_source?.trim() : "",
       paid_amount: form.status === "paid" ? form.gross_amount - form.fee_amount : form.status === "failed" ? 0 : Math.min(form.paid_amount, form.gross_amount - form.fee_amount),
     };
+    setSaving(true);
     try {
       const saved = editing ? await updateIncome(editing.id, payload) : await createIncome(payload);
       if (invoiceFile) await uploadIncomeInvoice(saved.id, invoiceFile);
@@ -161,6 +165,8 @@ export default function IncomePage() {
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menyimpan pemasukan." });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -177,6 +183,7 @@ export default function IncomePage() {
 
   const submitFeeAdjustment = async () => {
     if (!feeAdjustTarget) return;
+    setSavingFee(true);
     try {
       const updated = await adjustIncomeFee(feeAdjustTarget.id, feeAdjustValue);
       setSelected((current) => current?.id === updated.id ? updated : current);
@@ -185,6 +192,8 @@ export default function IncomePage() {
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menyesuaikan fee." });
+    } finally {
+      setSavingFee(false);
     }
   };
 
@@ -205,7 +214,8 @@ export default function IncomePage() {
   };
 
   const removeIncome = async (item: IncomeRow) => {
-    if (!window.confirm(`Hapus pencatatan pemasukan ${item.reference}?`)) return;
+    if (deleting || !window.confirm(`Hapus pencatatan pemasukan ${item.reference}?`)) return;
+    setDeleting(true);
     try {
       await deleteIncome(item.id);
       setSelected((current) => current?.id === item.id ? null : current);
@@ -213,6 +223,8 @@ export default function IncomePage() {
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menghapus pemasukan." });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -339,7 +351,7 @@ export default function IncomePage() {
         <Group grow>
           {canWrite && !selected.synced_from_doku && selected.status !== "paid" && <Button variant="light" color="dark" leftSection={<IconEdit size={16} />} onClick={() => { open(selected); setSelected(null); }}>Edit pemasukan</Button>}
           {canWrite && selected.synced_from_doku && <Button variant="light" color="dark" leftSection={<IconRefresh size={16} />} onClick={() => { setFeeAdjustValue(selected.fee_amount); setFeeAdjustTarget(selected); }}>Sesuaikan fee</Button>}
-          {canWrite && !selected.synced_from_doku && <Button variant="light" color="red" leftSection={<IconTrash size={16} />} onClick={() => removeIncome(selected)}>Hapus</Button>}
+          {canWrite && !selected.synced_from_doku && <Button variant="light" color="red" loading={deleting} leftSection={<IconTrash size={16} />} onClick={() => removeIncome(selected)}>Hapus</Button>}
         </Group>
       </Stack>}
     </Drawer>
@@ -374,8 +386,8 @@ export default function IncomePage() {
         {form.status === "unpaid" && <NumberInput label="Sudah dibayar" description={`To be paid: ${formatCurrency(Math.max(0, form.gross_amount - form.fee_amount - form.paid_amount))}`} min={0} max={Math.max(0, form.gross_amount - form.fee_amount)} value={form.paid_amount} onChange={(value) => update("paid_amount", Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," />}
         <Textarea label="Catatan tambahan" minRows={3} value={form.notes ?? ""} onChange={(event) => update("notes", event.currentTarget.value)} />
         <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={() => setEditing(undefined)}>Batal</Button>
-          <Button className="primary-action" leftSection={<IconCheck size={16} />} onClick={submit}>Simpan pemasukan</Button>
+          <Button variant="subtle" color="gray" disabled={saving} onClick={() => setEditing(undefined)}>Batal</Button>
+          <Button className="primary-action" loading={saving} leftSection={<IconCheck size={16} />} onClick={submit}>Simpan pemasukan</Button>
         </Group>
       </Stack>
     </Modal>
@@ -389,8 +401,8 @@ export default function IncomePage() {
         </SimpleGrid>
         <NumberInput label="Fee DOKU" min={0} max={feeAdjustTarget.gross_amount} value={feeAdjustValue} onChange={(value) => setFeeAdjustValue(Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," />
         <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={() => setFeeAdjustTarget(null)}>Batal</Button>
-          <Button className="primary-action" leftSection={<IconCheck size={16} />} onClick={submitFeeAdjustment}>Simpan fee</Button>
+          <Button variant="subtle" color="gray" disabled={savingFee} onClick={() => setFeeAdjustTarget(null)}>Batal</Button>
+          <Button className="primary-action" loading={savingFee} leftSection={<IconCheck size={16} />} onClick={submitFeeAdjustment}>Simpan fee</Button>
         </Group>
       </Stack>}
     </Modal>

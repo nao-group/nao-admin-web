@@ -80,6 +80,8 @@ export default function ExpensesPage() {
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [fundingSource, setFundingSource] = useState<FundingSource>("company");
   const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     void listStaffOptions().then(setStaffOptions).catch(() => setStaffOptions([]));
@@ -154,6 +156,7 @@ export default function ExpensesPage() {
       staff_id: fundingSource === "staff" ? form.staff_id : null,
       paid_by: staff ? staff.full_name : form.paid_by.trim(),
     };
+    setSaving(true);
     try {
       const saved = editing ? await updateExpense(editing.id, payload) : await createExpense(payload);
       if (evidenceFile) await uploadExpenseEvidence(saved.id, evidenceFile);
@@ -162,6 +165,8 @@ export default function ExpensesPage() {
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menyimpan pengeluaran." });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -177,7 +182,8 @@ export default function ExpensesPage() {
   };
 
   const removeExpense = async (item: ExpenseRow) => {
-    if (!window.confirm(`Hapus pengeluaran ${item.reference}?`)) return;
+    if (deleting || !window.confirm(`Hapus pengeluaran ${item.reference}?`)) return;
+    setDeleting(true);
     try {
       await deleteExpense(item.id);
       setSelected((current) => current?.id === item.id ? null : current);
@@ -186,6 +192,8 @@ export default function ExpensesPage() {
     } catch (error) {
       // Payroll-generated expenses are rejected by the backend with an explanatory message.
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menghapus pengeluaran." });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -281,7 +289,7 @@ export default function ExpensesPage() {
         <Box><Text className="section-title" mb="sm">Catatan</Text><Text size="sm" c="dimmed" lh={1.7}>{selected.notes || "Tidak ada catatan tambahan."}</Text></Box>
         {canWrite && <Group grow>
           {selected.status === "pending" && <Button variant="light" color="dark" leftSection={<IconEdit size={16} />} onClick={() => { open(selected); setSelected(null); }}>Edit pengeluaran</Button>}
-          <Button variant="light" color="red" leftSection={<IconTrash size={16} />} onClick={() => removeExpense(selected)}>Hapus</Button>
+          <Button variant="light" color="red" loading={deleting} leftSection={<IconTrash size={16} />} onClick={() => removeExpense(selected)}>Hapus</Button>
         </Group>}
       </Stack>}
     </Drawer>
@@ -311,8 +319,8 @@ export default function ExpensesPage() {
         </SimpleGrid>
         <Textarea label="Catatan" minRows={3} value={form.notes ?? ""} onChange={(event) => update("notes", event.currentTarget.value)} />
         <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={() => setEditing(undefined)}>Batal</Button>
-          <Button className="primary-action" leftSection={<IconCheck size={16} />} onClick={submit}>Simpan pengeluaran</Button>
+          <Button variant="subtle" color="gray" disabled={saving} onClick={() => setEditing(undefined)}>Batal</Button>
+          <Button className="primary-action" loading={saving} leftSection={<IconCheck size={16} />} onClick={submit}>Simpan pengeluaran</Button>
         </Group>
       </Stack>
     </Modal>

@@ -230,7 +230,7 @@ export default function ExpenseAutomationPage() {
         <Textarea label="Catatan" minRows={3} maxLength={1000} value={form.notes ?? ""} onChange={(event) => update("notes", event.currentTarget.value)} />
         <Switch label="Aktifkan aturan ini" checked={form.active} onChange={(event) => update("active", event.currentTarget.checked)} />
         <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={() => setEditing(undefined)}>Batal</Button>
+          <Button variant="subtle" color="gray" disabled={saving} onClick={() => setEditing(undefined)}>Batal</Button>
           <Button className="primary-action" loading={saving} leftSection={<IconCheck size={16} />} onClick={submit}>Simpan aturan</Button>
         </Group>
       </Stack>

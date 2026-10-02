@@ -63,6 +63,8 @@ export default function PayrollPage() {
   const [editing, setEditing] = useState<PayrollRow | null | undefined>(undefined);
   const [form, setForm] = useState<PayrollWritePayload>(blankForm());
   const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
   const [reimbursementTarget, setReimbursementTarget] = useState<PayrollRow | null>(null);
   const [reimbursements, setReimbursements] = useState<PayrollReimbursement[] | null>(null);
 
@@ -120,6 +122,7 @@ export default function PayrollPage() {
       notifications.show({ color: "red", message: "Staff, periode, dan gaji pokok wajib diisi." });
       return;
     }
+    setSaving(true);
     try {
       if (editing) await updatePayroll(editing.id, form); else await createPayroll(form);
       setEditing(undefined);
@@ -127,6 +130,8 @@ export default function PayrollPage() {
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menyimpan payroll." });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -159,6 +164,8 @@ export default function PayrollPage() {
   };
 
   const recalculate = async (item: PayrollRow) => {
+    if (recalculating) return;
+    setRecalculating(true);
     try {
       const updated = await recalculatePayroll(item.id);
       notifications.show({ color: "teal", message: `Reimbursement ${item.staff.full_name} dihitung ulang: ${formatCurrency(updated.reimbursement)}.` });
@@ -166,6 +173,8 @@ export default function PayrollPage() {
       if (reimbursementTarget?.id === item.id) showReimbursements(updated);
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menghitung ulang reimbursement." });
+    } finally {
+      setRecalculating(false);
     }
   };
 
@@ -270,8 +279,8 @@ export default function PayrollPage() {
         <Card withBorder radius="md" p="md"><Group justify="space-between"><Text size="sm" c="dimmed">Total transfer</Text><Text fw={700} size="lg">{formatCurrency(totalTransfer)}</Text></Group><Text size="xs" c="dimmed" mt={4}>Reimbursement dihitung ulang saat disimpan: semua pengeluaran berstatus pending dengan sumber dana karyawan ini, bertanggal sampai akhir periode, yang belum masuk payroll lain.</Text></Card>
         <Textarea label="Catatan" minRows={3} value={form.notes ?? ""} onChange={(event) => update("notes", event.currentTarget.value)} />
         <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={() => setEditing(undefined)}>Batal</Button>
-          <Button className="primary-action" leftSection={<IconCheck size={16} />} onClick={submit}>Simpan payroll</Button>
+          <Button variant="subtle" color="gray" disabled={saving} onClick={() => setEditing(undefined)}>Batal</Button>
+          <Button className="primary-action" loading={saving} leftSection={<IconCheck size={16} />} onClick={submit}>Simpan payroll</Button>
         </Group>
       </Stack>
     </Modal>
@@ -293,7 +302,7 @@ export default function PayrollPage() {
         </Table> : <Text size="sm" c="dimmed">Belum ada pengeluaran karyawan ini yang masuk payroll periode ini. Catat pengeluaran di menu Pengeluaran dengan sumber dana karyawan.</Text>}
         <Group justify="space-between">
           <Button component="a" href="/finance/expenses" variant="subtle" color="dark">Buka Pengeluaran</Button>
-          {canWrite && reimbursementTarget.status === "pending" && <Button variant="light" color="dark" leftSection={<IconRefresh size={16} />} onClick={() => recalculate(reimbursementTarget)}>Hitung ulang</Button>}
+          {canWrite && reimbursementTarget.status === "pending" && <Button variant="light" color="dark" loading={recalculating} leftSection={<IconRefresh size={16} />} onClick={() => recalculate(reimbursementTarget)}>Hitung ulang</Button>}
         </Group>
       </Stack>}
     </Modal>

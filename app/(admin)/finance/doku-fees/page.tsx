@@ -18,6 +18,7 @@ export default function DokuFeesPage() {
   const [fees, setFees] = useState<DokuFeeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<DokuFeeRow | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const refresh = () => {
     setLoading(true);
@@ -31,6 +32,7 @@ export default function DokuFeesPage() {
 
   const submit = async () => {
     if (!form) return;
+    setSaving(true);
     try {
       await updateDokuFee(form.id, {
         method_label: form.method_label, percentage: form.percentage,
@@ -41,6 +43,8 @@ export default function DokuFeesPage() {
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal memperbarui tarif." });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -87,8 +91,8 @@ export default function DokuFeesPage() {
         </Group>
         <Textarea label="Catatan" minRows={3} value={form.note ?? ""} onChange={(event) => setForm({ ...form, note: event.currentTarget.value })} />
         <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={() => setForm(null)}>Batal</Button>
-          <Button className="primary-action" leftSection={<IconCheck size={16} />} onClick={submit}>Simpan tarif</Button>
+          <Button variant="subtle" color="gray" disabled={saving} onClick={() => setForm(null)}>Batal</Button>
+          <Button className="primary-action" loading={saving} leftSection={<IconCheck size={16} />} onClick={submit}>Simpan tarif</Button>
         </Group>
       </Stack>}
     </Modal>
