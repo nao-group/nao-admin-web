@@ -1,4 +1,7 @@
-import type { PayrollListResult, PayrollOverview, PayrollRow, PayrollStatus, PayrollWritePayload, StaffOption } from "./types";
+import type {
+  PayrollListResult, PayrollOverview, PayrollReimbursement, PayrollRow, PayrollSettings, PayrollStatus, PayrollWritePayload,
+  StaffOption,
+} from "./types";
 
 export class PayrollApiError extends Error {}
 
@@ -58,5 +61,25 @@ export async function listStaffOptions(): Promise<StaffOption[]> {
     role_label: roleLabels[String(raw.role)] ?? String(raw.role ?? ""),
     base_salary: Number(raw.base_salary ?? 0),
     allowance: Number(raw.allowance ?? 0),
+    bank_name: String(raw.bank_name ?? ""),
   }));
+}
+
+/** Runs the monthly draft job now; `period` defaults to the previous month. */
+export async function generatePayrolls(period?: string): Promise<{ created: number }> {
+  return result(await fetch("/api/admin/finance/payroll/generate", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(period ? { period } : {}),
+  }));
+}
+
+export async function recalculatePayroll(id: number): Promise<PayrollRow> {
+  return result(await fetch(`/api/admin/finance/payroll/${id}/recalculate`, { method: "POST" }));
+}
+
+export async function listPayrollReimbursements(id: number): Promise<PayrollReimbursement[]> {
+  return result(await fetch(`/api/admin/finance/payroll/${id}/reimbursements`, { cache: "no-store" }));
+}
+
+export async function getPayrollSettings(): Promise<PayrollSettings> {
+  return result(await fetch("/api/admin/finance/payroll/settings", { cache: "no-store" }));
 }

@@ -1,4 +1,4 @@
-export type ExpenseCategory = "payroll" | "bank_fee" | "maintenance" | "other";
+export type ExpenseCategory = "payroll" | "bank_fee" | "maintenance" | "reimbursement" | "other";
 export type ExpenseStatus = "pending" | "done";
 
 export type ExpenseRow = {
@@ -8,6 +8,10 @@ export type ExpenseRow = {
   custom_category: string | null;
   occurred_at: string;
   paid_by: string;
+  /** Sumber dana = karyawan: they fronted the money and are reimbursed through payroll. */
+  staff_id: number | null;
+  /** The payroll that reimburses (or will reimburse) this expense. */
+  payroll_id: number | null;
   evidence_url: string | null;
   evidence_file_path: string | null;
   amount: number;
@@ -35,6 +39,8 @@ export type ExpenseWritePayload = {
   category: ExpenseCategory;
   custom_category?: string | null;
   occurred_at: string;
+  /** Set → paid_by is filled with the staff member's name by the backend. */
+  staff_id: number | null;
   paid_by: string;
   evidence_url?: string | null;
   amount: number;

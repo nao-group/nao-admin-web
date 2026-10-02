@@ -24,6 +24,8 @@ export type PayrollRow = {
   payslip_sent_at: string | null;
   finance_expense_id: number | null;
   notes: string | null;
+  /** Draft created by the monthly job rather than by an admin. */
+  auto_generated: boolean;
   staff: PayrollStaff;
   created_at: string;
   updated_at: string;
@@ -43,9 +45,21 @@ export type PayrollWritePayload = {
   period: string;
   base_salary: number;
   allowance: number;
-  reimbursement: number;
-  admin_fee: number;
+  // No reimbursement or admin_fee: the backend derives them from the staff
+  // member's expenses and bank (non-BCA transfer fee).
   notes?: string | null;
+};
+
+/** An expense the staff member paid for, settled through this payroll. */
+export type PayrollReimbursement = {
+  id: number;
+  reference: string;
+  category: string;
+  custom_category: string | null;
+  occurred_at: string;
+  amount: number;
+  notes: string | null;
+  status: PayrollStatus;
 };
 
 export type StaffOption = {
@@ -54,4 +68,7 @@ export type StaffOption = {
   role_label: string;
   base_salary: number;
   allowance: number;
+  bank_name: string;
 };
+
+export type PayrollSettings = { non_bca_transfer_fee: number };

@@ -5,7 +5,13 @@ export class AutoExpenseApiError extends Error {}
 async function result<T>(response: Response): Promise<T> {
   if (response.status === 204) return undefined as T;
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new AutoExpenseApiError(body.detail ?? "Request failed. Please try again.");
+  if (!response.ok) {
+    // 422s from FastAPI carry a list of {msg}; pydantic prefixes custom messages with "Value error, ".
+    const detail = Array.isArray(body.detail)
+      ? body.detail.map((item: { msg?: string }) => item.msg?.replace(/^Value error, /, "")).filter(Boolean).join(", ")
+      : body.detail;
+    throw new AutoExpenseApiError(detail || "Request failed. Please try again.");
+  }
   return body as T;
 }
 
