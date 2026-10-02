@@ -1,5 +1,7 @@
 export type IncomeSource = "thinknao" | "studynao" | "grant" | "other";
 export type IncomeStatus = "unpaid" | "paid" | "failed";
+/** Invoice letterhead: product logo, or plain NAO Group for non-product income. */
+export type InvoiceBrand = "thinknao" | "studynao" | "nao";
 
 export type IncomeRow = {
   id: number;

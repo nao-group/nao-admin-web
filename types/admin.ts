@@ -1,13 +1,3 @@
-export type Payment = {
-  id: string;
-  member: string;
-  product: "ThinkNAO" | "StudyNAO";
-  amount: number;
-  status: "Paid" | "Pending" | "Failed" | "Refunded";
-  date: string;
-  method: string;
-};
-
 export type BannerStatus = "Active" | "Scheduled" | "Draft" | "Expired";
 
 export type Banner = {

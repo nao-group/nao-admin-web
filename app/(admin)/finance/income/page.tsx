@@ -8,8 +8,8 @@ import {
 import { DatePickerInput, DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
 import {
-  IconCheck, IconChevronDown, IconCloudDownload, IconDotsVertical, IconEdit, IconExternalLink, IconPlus,
-  IconRefresh, IconUpload,
+  IconCheck, IconChevronDown, IconCloudDownload, IconDotsVertical, IconDownload, IconEdit, IconExternalLink,
+  IconFileInvoice, IconPlus, IconRefresh, IconTrash, IconUpload,
 } from "@tabler/icons-react";
 import { DetailItem, MetricCard, PageHeader } from "@/components/ui/admin";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -17,10 +17,10 @@ import { primaryRole } from "@/lib/admin-access";
 import { useAuthStore } from "@/store/auth";
 import { calculateDokuFee } from "../utils";
 import {
-  adjustIncomeFee, createIncome, getIncomeOverview, incomeExportUrl, incomeInvoiceViewUrl, listDokuFees,
-  listIncomes, updateIncome, updateIncomeStatus, uploadIncomeInvoice,
+  adjustIncomeFee, createIncome, deleteIncome, generateIncomeInvoice, getIncomeOverview, incomeExportUrl,
+  incomeInvoiceViewUrl, listDokuFees, listIncomes, updateIncome, updateIncomeStatus, uploadIncomeInvoice,
 } from "./api";
-import type { DokuFeeOption, IncomeOverview, IncomeRow, IncomeSource, IncomeStatus, IncomeWritePayload } from "./types";
+import type { DokuFeeOption, IncomeOverview, IncomeRow, IncomeSource, IncomeStatus, IncomeWritePayload, InvoiceBrand } from "./types";
 
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS: IncomeStatus[] = ["unpaid", "paid", "failed"];
@@ -40,6 +40,12 @@ const sourceLabel = (item: Pick<IncomeRow, "source" | "custom_source">) =>
   item.source === "other" ? item.custom_source?.trim() || "Lainnya" : SOURCE_LABELS[item.source];
 const invoiceHref = (item: Pick<IncomeRow, "id" | "invoice_url" | "invoice_file_path">) =>
   item.invoice_file_path ? incomeInvoiceViewUrl(item.id) : item.invoice_url || null;
+
+const INVOICE_BRAND_LABELS: Record<InvoiceBrand, string> = { thinknao: "ThinkNAO", studynao: "StudyNAO", nao: "NAO Group" };
+// Mirrors the backend default (services/admin/invoice.py): product logo, plain NAO for everything else.
+const defaultInvoiceBrand = (source: IncomeSource): InvoiceBrand => source === "thinknao" || source === "studynao" ? source : "nao";
+// Generated invoices are stored under income/<id>/generated/<brand>/…; anything else is an admin upload.
+const isGeneratedInvoice = (item: Pick<IncomeRow, "invoice_file_path">) => Boolean(item.invoice_file_path?.includes("/generated/"));
 
 const generateReference = (prefix: string) => {
   const stamp = new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);
@@ -78,6 +84,7 @@ export default function IncomePage() {
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [feeAdjustTarget, setFeeAdjustTarget] = useState<IncomeRow | null>(null);
   const [feeAdjustValue, setFeeAdjustValue] = useState(0);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
 
   const filterParams = useMemo(() => ({
     search: query, source: sourceFilter, status: statusFilter,
@@ -181,6 +188,34 @@ export default function IncomePage() {
     }
   };
 
+  const generateInvoice = async (item: IncomeRow, brand: InvoiceBrand) => {
+    if (item.invoice_file_path && !isGeneratedInvoice(item)
+      && !window.confirm("File invoice yang di-upload akan diganti dengan invoice yang di-generate. Lanjutkan?")) return;
+    setGeneratingInvoice(true);
+    try {
+      const updated = await generateIncomeInvoice(item.id, brand);
+      setSelected((current) => current?.id === updated.id ? updated : current);
+      notifications.show({ color: "teal", message: `Invoice ${item.reference} dibuat dengan logo ${INVOICE_BRAND_LABELS[brand]}.` });
+      refresh();
+    } catch (error) {
+      notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal membuat invoice." });
+    } finally {
+      setGeneratingInvoice(false);
+    }
+  };
+
+  const removeIncome = async (item: IncomeRow) => {
+    if (!window.confirm(`Hapus pencatatan pemasukan ${item.reference}?`)) return;
+    try {
+      await deleteIncome(item.id);
+      setSelected((current) => current?.id === item.id ? null : current);
+      notifications.show({ color: "teal", message: `${item.reference} dihapus.` });
+      refresh();
+    } catch (error) {
+      notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menghapus pemasukan." });
+    }
+  };
+
   const statusMenu = (item: IncomeRow) => {
     const badge = <Badge color={statusTone(item.status)} variant="light" leftSection={<span className="status-dot" />} rightSection={canWrite && !item.synced_from_doku ? <IconChevronDown size={12} /> : undefined} className="report-status-badge">{STATUS_LABELS[item.status]}</Badge>;
     if (!canWrite || item.synced_from_doku) return badge;
@@ -238,12 +273,14 @@ export default function IncomePage() {
                 <Table.Td><Text size="sm" fw={600}>{formatCurrency(item.paid_amount)}</Text><Text size="xs" c="dimmed">sisa {formatCurrency(Math.max(0, item.net_amount - item.paid_amount))}</Text></Table.Td>
                 <Table.Td onClick={(event) => event.stopPropagation()}>{statusMenu(item)}</Table.Td>
                 <Table.Td onClick={(event) => event.stopPropagation()}>
-                  {(invoiceHref(item) || editable || (canWrite && item.synced_from_doku)) && <Menu position="bottom-end">
+                  {(invoiceHref(item) || canWrite) && <Menu position="bottom-end">
                     <Menu.Target><ActionIcon variant="subtle" color="gray" aria-label={`Aksi ${item.reference}`}><IconDotsVertical size={17} /></ActionIcon></Menu.Target>
                     <Menu.Dropdown>
                       {invoiceHref(item) && <Menu.Item component="a" href={invoiceHref(item)!} target="_blank" rel="noreferrer" leftSection={<IconExternalLink size={15} />}>Lihat invoice</Menu.Item>}
                       {editable && <Menu.Item leftSection={<IconEdit size={15} />} onClick={() => open(item)}>Edit</Menu.Item>}
                       {canWrite && item.synced_from_doku && <Menu.Item leftSection={<IconRefresh size={15} />} onClick={() => { setFeeAdjustValue(item.fee_amount); setFeeAdjustTarget(item); }}>Sesuaikan fee</Menu.Item>}
+                      {canWrite && item.status !== "failed" && <Menu.Item leftSection={<IconFileInvoice size={15} />} onClick={() => setSelected(item)}>Generate invoice</Menu.Item>}
+                      {canWrite && !item.synced_from_doku && <Menu.Item color="red" leftSection={<IconTrash size={15} />} onClick={() => removeIncome(item)}>Hapus</Menu.Item>}
                     </Menu.Dropdown>
                   </Menu>}
                 </Table.Td>
@@ -275,11 +312,34 @@ export default function IncomePage() {
           <DetailItem label="To be paid" value={formatCurrency(Math.max(0, selected.net_amount - selected.paid_amount))} />
         </SimpleGrid>
         <Divider />
+        <Box>
+          <Text className="section-title" mb="sm">Invoice</Text>
+          <Stack gap="sm">
+            {invoiceHref(selected) && <Group grow>
+              <Button component="a" href={invoiceHref(selected)!} target="_blank" rel="noreferrer" variant="light" color="dark" leftSection={<IconExternalLink size={16} />}>Lihat invoice</Button>
+              {selected.invoice_file_path && <Button component="a" href={incomeInvoiceViewUrl(selected.id)} download={`Invoice-${selected.reference}.pdf`} variant="light" color="dark" leftSection={<IconDownload size={16} />}>Download</Button>}
+            </Group>}
+            {canWrite && <Button.Group>
+              <Button flex={1} className="primary-action" loading={generatingInvoice} disabled={selected.status === "failed"} leftSection={<IconFileInvoice size={16} />} onClick={() => generateInvoice(selected, defaultInvoiceBrand(selected.source))}>
+                {isGeneratedInvoice(selected) ? "Generate ulang invoice" : "Generate invoice"}
+              </Button>
+              <Menu position="bottom-end" withinPortal>
+                <Menu.Target><Button className="primary-action" px={10} disabled={generatingInvoice || selected.status === "failed"} aria-label="Pilih logo invoice"><IconChevronDown size={16} /></Button></Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Label>Logo invoice</Menu.Label>
+                  {(Object.keys(INVOICE_BRAND_LABELS) as InvoiceBrand[]).map((brand) => <Menu.Item key={brand} onClick={() => generateInvoice(selected, brand)} rightSection={brand === defaultInvoiceBrand(selected.source) ? <Text size="xs" c="dimmed">default</Text> : null}>{INVOICE_BRAND_LABELS[brand]}</Menu.Item>)}
+                </Menu.Dropdown>
+              </Menu>
+            </Button.Group>}
+            {canWrite && <Text size="xs" c="dimmed">{selected.status === "failed" ? "Invoice tidak bisa dibuat untuk pemasukan yang gagal." : `PDF dibuat dengan logo ${INVOICE_BRAND_LABELS[defaultInvoiceBrand(selected.source)]}; pilih logo lain lewat tombol panah.`}</Text>}
+          </Stack>
+        </Box>
+        <Divider />
         <Box><Text className="section-title" mb="sm">Catatan</Text><Text size="sm" c="dimmed" lh={1.7}>{selected.notes || "Tidak ada catatan tambahan."}</Text></Box>
         <Group grow>
-          {invoiceHref(selected) && <Button component="a" href={invoiceHref(selected)!} target="_blank" rel="noreferrer" variant="light" color="dark" leftSection={<IconExternalLink size={16} />}>Lihat invoice</Button>}
           {canWrite && !selected.synced_from_doku && selected.status !== "paid" && <Button variant="light" color="dark" leftSection={<IconEdit size={16} />} onClick={() => { open(selected); setSelected(null); }}>Edit pemasukan</Button>}
           {canWrite && selected.synced_from_doku && <Button variant="light" color="dark" leftSection={<IconRefresh size={16} />} onClick={() => { setFeeAdjustValue(selected.fee_amount); setFeeAdjustTarget(selected); }}>Sesuaikan fee</Button>}
+          {canWrite && !selected.synced_from_doku && <Button variant="light" color="red" leftSection={<IconTrash size={16} />} onClick={() => removeIncome(selected)}>Hapus</Button>}
         </Group>
       </Stack>}
     </Drawer>
@@ -308,7 +368,7 @@ export default function IncomePage() {
           <Text size="xs" c="dimmed" mt="sm">Fee dapat diubah pada transaksi ini jika tarif kontrak berbeda. Tarif global tersedia di menu Tarif DOKU.</Text>
         </Card>}
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Link invoice (opsional)" placeholder={form.source === "thinknao" ? "https://dashboard.doku.com/invoice/..." : "https://drive.google.com/..."} value={form.invoice_url ?? ""} onChange={(event) => update("invoice_url", event.currentTarget.value)} />
+          <TextInput label="Link invoice (opsional)" placeholder="https://drive.google.com/..." value={form.invoice_url ?? ""} onChange={(event) => update("invoice_url", event.currentTarget.value)} />
           <FileInput label="Atau upload invoice" placeholder="PDF/JPG/PNG" accept="application/pdf,image/png,image/jpeg" value={invoiceFile} onChange={setInvoiceFile} leftSection={<IconUpload size={16} />} />
         </SimpleGrid>
         {form.status === "unpaid" && <NumberInput label="Sudah dibayar" description={`To be paid: ${formatCurrency(Math.max(0, form.gross_amount - form.fee_amount - form.paid_amount))}`} min={0} max={Math.max(0, form.gross_amount - form.fee_amount)} value={form.paid_amount} onChange={(value) => update("paid_amount", Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," />}

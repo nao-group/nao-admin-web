@@ -64,3 +64,7 @@ export async function uploadExpenseEvidence(id: number, file: File): Promise<Exp
 export function expenseEvidenceViewUrl(id: number): string {
   return `/api/admin/finance/expenses/${id}/evidence`;
 }
+
+export async function deleteExpense(id: number): Promise<void> {
+  await result(await fetch(`/api/admin/finance/expenses/${id}`, { method: "DELETE" }));
+}

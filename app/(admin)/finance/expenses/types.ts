@@ -24,6 +24,9 @@ export type ExpenseListResult = { items: ExpenseRow[]; total: number; page: numb
 export type ExpenseOverview = {
   paid_total: number;
   pending_total: number;
+  paid_count: number;
+  pending_count: number;
+  maintenance_total: number;
   active_automation_count: number;
 };
 

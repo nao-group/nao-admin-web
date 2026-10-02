@@ -9,15 +9,15 @@ import { DatePickerInput, DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
 import {
   IconBuildingBank, IconCheck, IconChevronDown, IconDotsVertical, IconDownload, IconEdit, IconExternalLink,
-  IconPlus, IconUpload, IconWallet,
+  IconPlus, IconReceipt, IconTrash, IconUpload, IconWallet,
 } from "@tabler/icons-react";
 import { DetailItem, MetricCard, PageHeader } from "@/components/ui/admin";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { primaryRole } from "@/lib/admin-access";
 import { useAuthStore } from "@/store/auth";
 import {
-  createExpense, expenseEvidenceViewUrl, expenseExportUrl, getExpenseOverview, listExpenses, updateExpense,
-  updateExpenseStatus, uploadExpenseEvidence,
+  createExpense, deleteExpense, expenseEvidenceViewUrl, expenseExportUrl, getExpenseOverview, listExpenses,
+  updateExpense, updateExpenseStatus, uploadExpenseEvidence,
 } from "./api";
 import type { ExpenseCategory, ExpenseOverview, ExpenseRow, ExpenseStatus, ExpenseWritePayload } from "./types";
 
@@ -144,6 +144,19 @@ export default function ExpensesPage() {
     }
   };
 
+  const removeExpense = async (item: ExpenseRow) => {
+    if (!window.confirm(`Hapus pengeluaran ${item.reference}?`)) return;
+    try {
+      await deleteExpense(item.id);
+      setSelected((current) => current?.id === item.id ? null : current);
+      notifications.show({ color: "teal", message: `${item.reference} dihapus.` });
+      refresh();
+    } catch (error) {
+      // Payroll-generated expenses are rejected by the backend with an explanatory message.
+      notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menghapus pengeluaran." });
+    }
+  };
+
   const statusMenu = (item: ExpenseRow) => {
     const badge = <Badge color={item.status === "done" ? "teal" : "yellow"} variant="light" leftSection={<span className="status-dot" />} rightSection={canWrite ? <IconChevronDown size={12} /> : undefined} className="report-status-badge">{STATUS_LABELS[item.status]}</Badge>;
     if (!canWrite) return badge;
@@ -161,9 +174,10 @@ export default function ExpensesPage() {
       </Group>} />
 
     <SimpleGrid cols={{ base: 1, xs: 2, xl: 4 }} mb="lg">
-      {!overview ? Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} height={110} radius="md" />) : <>
-        <MetricCard label="Pengeluaran done" value={formatCurrency(overview.paid_total)} icon={IconCheck} tone="green" />
-        <MetricCard label="Menunggu pembayaran" value={formatCurrency(overview.pending_total)} icon={IconWallet} tone="gold" />
+      {!overview ? Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} height={110} radius="md" />) : <>
+        <MetricCard label="Pengeluaran done" value={formatCurrency(overview.paid_total)} delta={`${overview.paid_count} transaksi`} icon={IconCheck} tone="green" />
+        <MetricCard label="Menunggu pembayaran" value={formatCurrency(overview.pending_total)} delta={`${overview.pending_count} pending`} icon={IconWallet} tone="gold" />
+        <MetricCard label="Maintenance" value={formatCurrency(overview.maintenance_total)} delta="periode terpilih" icon={IconReceipt} />
         <MetricCard label="Aturan otomatis" value={String(overview.active_automation_count)} delta="aktif setiap bulan" icon={IconBuildingBank} tone="purple" />
       </>}
     </SimpleGrid>
@@ -195,11 +209,12 @@ export default function ExpensesPage() {
                 <Table.Td onClick={(event) => event.stopPropagation()}>{statusMenu(item)}</Table.Td>
                 <Table.Td ta="right" fw={700}>{formatCurrency(item.amount)}</Table.Td>
                 <Table.Td onClick={(event) => event.stopPropagation()}>
-                  {(evidenceHref(item) || editable) && <Menu position="bottom-end">
+                  {(evidenceHref(item) || canWrite) && <Menu position="bottom-end">
                     <Menu.Target><ActionIcon variant="subtle" color="gray" aria-label={`Aksi ${item.reference}`}><IconDotsVertical size={17} /></ActionIcon></Menu.Target>
                     <Menu.Dropdown>
                       {evidenceHref(item) && <Menu.Item component="a" href={evidenceHref(item)!} target="_blank" rel="noreferrer" leftSection={<IconExternalLink size={15} />}>Lihat bukti transaksi</Menu.Item>}
                       {editable && <Menu.Item leftSection={<IconEdit size={15} />} onClick={() => open(item)}>Edit</Menu.Item>}
+                      {canWrite && <Menu.Item color="red" leftSection={<IconTrash size={15} />} onClick={() => removeExpense(item)}>Hapus</Menu.Item>}
                     </Menu.Dropdown>
                   </Menu>}
                 </Table.Td>
@@ -229,7 +244,10 @@ export default function ExpensesPage() {
         </SimpleGrid>
         <Divider />
         <Box><Text className="section-title" mb="sm">Catatan</Text><Text size="sm" c="dimmed" lh={1.7}>{selected.notes || "Tidak ada catatan tambahan."}</Text></Box>
-        {canWrite && selected.status === "pending" && <Button variant="light" color="dark" leftSection={<IconEdit size={16} />} onClick={() => { open(selected); setSelected(null); }}>Edit pengeluaran</Button>}
+        {canWrite && <Group grow>
+          {selected.status === "pending" && <Button variant="light" color="dark" leftSection={<IconEdit size={16} />} onClick={() => { open(selected); setSelected(null); }}>Edit pengeluaran</Button>}
+          <Button variant="light" color="red" leftSection={<IconTrash size={16} />} onClick={() => removeExpense(selected)}>Hapus</Button>
+        </Group>}
       </Stack>}
     </Drawer>
 

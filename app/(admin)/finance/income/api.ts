@@ -1,5 +1,5 @@
 import type {
-  DokuFeeOption, IncomeListParams, IncomeListResult, IncomeOverview, IncomeRow, IncomeWritePayload,
+  DokuFeeOption, IncomeListParams, IncomeListResult, IncomeOverview, IncomeRow, IncomeWritePayload, InvoiceBrand,
 } from "./types";
 
 export class IncomeApiError extends Error {}
@@ -75,4 +75,15 @@ export async function uploadIncomeInvoice(id: number, file: File): Promise<Incom
 
 export function incomeInvoiceViewUrl(id: number): string {
   return `/api/admin/finance/income/${id}/invoice`;
+}
+
+/** Renders an invoice PDF on the backend and attaches it to the income, replacing any attached file. */
+export async function generateIncomeInvoice(id: number, brand: InvoiceBrand): Promise<IncomeRow> {
+  return result(await fetch(`/api/admin/finance/income/${id}/invoice/generate`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ brand }),
+  }));
+}
+
+export async function deleteIncome(id: number): Promise<void> {
+  await result(await fetch(`/api/admin/finance/income/${id}`, { method: "DELETE" }));
 }
