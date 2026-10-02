@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActionIcon, Badge, Box, Button, Card, Group, Loader, Menu, Modal, NumberInput, ScrollArea, Select, SimpleGrid,
+  ActionIcon, Badge, Box, Button, Card, Group, Loader, Menu, Modal, NumberInput, Pagination, ScrollArea, Select, SimpleGrid,
   Skeleton, Stack, Table, Text, Textarea, TextInput, UnstyledButton,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -20,7 +20,7 @@ import {
 } from "./api";
 import type { PayrollOverview, PayrollReimbursement, PayrollRow, PayrollStatus, PayrollWritePayload, StaffOption } from "./types";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 20;
 const STATUS_OPTIONS: PayrollStatus[] = ["pending", "done"];
 const STATUS_LABELS: Record<PayrollStatus, string> = { pending: "Pending", done: "Done" };
 
@@ -56,6 +56,7 @@ export default function PayrollPage() {
   const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
   const [nonBcaFee, setNonBcaFee] = useState<number | null>(null);
 
+  const [page, setPage] = useState(1);
   const [periodFilter, setPeriodFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<PayrollStatus | null>(null);
   const [query, setQuery] = useState("");
@@ -71,12 +72,18 @@ export default function PayrollPage() {
   const [reimbursements, setReimbursements] = useState<PayrollReimbursement[] | null>(null);
 
   const filterParams = useMemo(() => ({
-    page: 1, page_size: PAGE_SIZE, period: periodFilter || undefined, status: statusFilter, search: query,
-  }), [periodFilter, statusFilter, query]);
+    page, page_size: PAGE_SIZE, period: periodFilter || undefined, status: statusFilter, search: query,
+  }), [page, periodFilter, statusFilter, query]);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const refresh = () => {
     setListLoading(true);
-    void listPayroll(filterParams).then((r) => { setItems(r.items); setTotal(r.total); }).catch(() => { setItems([]); setTotal(0); }).finally(() => setListLoading(false));
+    void listPayroll(filterParams).then((r) => {
+      setItems(r.items); setTotal(r.total);
+      // The list can shrink under the user (e.g. a status filter after marking done) — step back to the last page.
+      const lastPage = Math.max(1, Math.ceil(r.total / PAGE_SIZE));
+      if (filterParams.page > lastPage) setPage(lastPage);
+    }).catch(() => { setItems([]); setTotal(0); }).finally(() => setListLoading(false));
     void getPayrollOverview().then(setOverview).catch(() => setOverview(null));
   };
 
@@ -244,9 +251,9 @@ export default function PayrollPage() {
 
     <Card className="surface-card filter-card" p="lg" mb="lg">
       <Group align="flex-end" wrap="wrap">
-        <TextInput label="Cari" placeholder="Nama staff" value={query} onChange={(event) => setQuery(event.currentTarget.value)} flex={1} miw={200} />
-        <TextInput type="month" label="Periode" value={periodFilter} onChange={(event) => setPeriodFilter(event.currentTarget.value)} w={170} />
-        <Select label="Status" value={statusFilter} onChange={(value) => setStatusFilter(value as PayrollStatus | null)} data={[{ value: "", label: "Semua status" }, ...STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABELS[s] }))]} clearable w={150} />
+        <TextInput label="Cari" placeholder="Nama staff" value={query} onChange={(event) => { setQuery(event.currentTarget.value); setPage(1); }} flex={1} miw={200} />
+        <TextInput type="month" label="Periode" value={periodFilter} onChange={(event) => { setPeriodFilter(event.currentTarget.value); setPage(1); }} w={170} />
+        <Select label="Status" value={statusFilter} onChange={(value) => { setStatusFilter((value || null) as PayrollStatus | null); setPage(1); }} data={[{ value: "", label: "Semua status" }, ...STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABELS[s] }))]} clearable w={150} />
       </Group>
     </Card>
 
@@ -287,6 +294,10 @@ export default function PayrollPage() {
           </Table.Tbody>
         </Table>
       </ScrollArea>
+      <Group className="pagination-bar" justify="space-between" p="md">
+        <Text size="xs" c="dimmed">Menampilkan {total ? (page - 1) * PAGE_SIZE + 1 : 0}–{Math.min(page * PAGE_SIZE, total)} dari {total}</Text>
+        <Pagination value={page} onChange={setPage} total={totalPages} size="sm" />
+      </Group>
     </Card>
 
     <Modal opened={editing !== undefined} onClose={() => setEditing(undefined)} size="lg" centered title={<Text className="section-title">{editing ? "Edit payroll" : "Tambah payroll"}</Text>}>
