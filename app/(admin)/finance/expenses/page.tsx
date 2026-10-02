@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActionIcon, Badge, Box, Button, Card, Divider, Drawer, FileInput, Group, Menu, Modal, NumberInput,
+  ActionIcon, Badge, Box, Button, Card, Divider, Drawer, FileInput, Group, Loader, Menu, Modal, NumberInput,
   Pagination, ScrollArea, SegmentedControl, Select, SimpleGrid, Skeleton, Stack, Table, Text, Textarea, TextInput, UnstyledButton,
 } from "@mantine/core";
 import { DatePickerInput, DateTimePicker } from "@mantine/dates";
@@ -82,6 +82,7 @@ export default function ExpensesPage() {
   const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [statusPendingIds, setStatusPendingIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     void listStaffOptions().then(setStaffOptions).catch(() => setStaffOptions([]));
@@ -170,14 +171,25 @@ export default function ExpensesPage() {
     }
   };
 
+  const markStatusPending = (id: number, pending: boolean) => setStatusPendingIds((current) => {
+    const next = new Set(current);
+    if (pending) next.add(id); else next.delete(id);
+    return next;
+  });
+
   const changeStatus = async (item: ExpenseRow, next: ExpenseStatus) => {
+    if (statusPendingIds.has(item.id)) return;
+    markStatusPending(item.id, true);
     try {
       const updated = await updateExpenseStatus(item.id, next);
+      setItems((current) => current.map((row) => row.id === item.id ? updated : row));
       setSelected((current) => current?.id === item.id ? updated : current);
       notifications.show({ color: next === "done" ? "teal" : "yellow", message: `${item.reference} diubah menjadi ${STATUS_LABELS[next]}.` });
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal mengubah status." });
+    } finally {
+      markStatusPending(item.id, false);
     }
   };
 
@@ -200,10 +212,11 @@ export default function ExpensesPage() {
   const statusMenu = (item: ExpenseRow) => {
     // Status of an expense settled through payroll follows that payroll, so it isn't editable here.
     const locked = !canWrite || item.payroll_id !== null;
-    const badge = <Badge color={item.status === "done" ? "teal" : "yellow"} variant="light" leftSection={<span className="status-dot" />} rightSection={locked ? undefined : <IconChevronDown size={12} />} className="report-status-badge">{STATUS_LABELS[item.status]}</Badge>;
+    const pending = statusPendingIds.has(item.id);
+    const badge = <Badge color={item.status === "done" ? "teal" : "yellow"} variant="light" leftSection={<span className="status-dot" />} rightSection={pending ? <Loader size={10} color="currentColor" /> : locked ? undefined : <IconChevronDown size={12} />} className="report-status-badge">{STATUS_LABELS[item.status]}</Badge>;
     if (locked) return badge;
-    return <Menu position="bottom-end" withinPortal>
-      <Menu.Target><UnstyledButton className="report-status-trigger" aria-label={`Ubah status ${item.reference}`}>{badge}</UnstyledButton></Menu.Target>
+    return <Menu position="bottom-end" withinPortal disabled={pending}>
+      <Menu.Target><UnstyledButton className="report-status-trigger" disabled={pending} aria-busy={pending} aria-label={`Ubah status ${item.reference}`}>{badge}</UnstyledButton></Menu.Target>
       <Menu.Dropdown>{STATUS_OPTIONS.map((option) => <Menu.Item key={option} disabled={option === item.status} leftSection={<span className="status-option-dot" style={{ background: `var(--mantine-color-${option === "done" ? "teal" : "yellow"}-6)` }} />} onClick={() => changeStatus(item, option)}>{STATUS_LABELS[option]}</Menu.Item>)}</Menu.Dropdown>
     </Menu>;
   };

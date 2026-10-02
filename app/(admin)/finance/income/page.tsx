@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActionIcon, Badge, Box, Button, Card, Divider, Drawer, FileInput, Group, Menu, Modal, NumberInput,
+  ActionIcon, Badge, Box, Button, Card, Divider, Drawer, FileInput, Group, Loader, Menu, Modal, NumberInput,
   Pagination, ScrollArea, Select, SimpleGrid, Skeleton, Stack, Table, Text, Textarea, TextInput, UnstyledButton,
 } from "@mantine/core";
 import { DatePickerInput, DateTimePicker } from "@mantine/dates";
@@ -88,6 +88,7 @@ export default function IncomePage() {
   const [saving, setSaving] = useState(false);
   const [savingFee, setSavingFee] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [statusPendingIds, setStatusPendingIds] = useState<Set<number>>(new Set());
 
   const filterParams = useMemo(() => ({
     search: query, source: sourceFilter, status: statusFilter,
@@ -170,14 +171,25 @@ export default function IncomePage() {
     }
   };
 
+  const markStatusPending = (id: number, pending: boolean) => setStatusPendingIds((current) => {
+    const next = new Set(current);
+    if (pending) next.add(id); else next.delete(id);
+    return next;
+  });
+
   const changeStatus = async (item: IncomeRow, status: IncomeStatus) => {
+    if (statusPendingIds.has(item.id)) return;
+    markStatusPending(item.id, true);
     try {
       const updated = await updateIncomeStatus(item.id, status);
+      setItems((current) => current.map((row) => row.id === item.id ? updated : row));
       setSelected((current) => current?.id === item.id ? updated : current);
       notifications.show({ color: statusTone(status), message: `${item.reference} diubah menjadi ${STATUS_LABELS[status]}.` });
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal mengubah status." });
+    } finally {
+      markStatusPending(item.id, false);
     }
   };
 
@@ -229,10 +241,11 @@ export default function IncomePage() {
   };
 
   const statusMenu = (item: IncomeRow) => {
-    const badge = <Badge color={statusTone(item.status)} variant="light" leftSection={<span className="status-dot" />} rightSection={canWrite && !item.synced_from_doku ? <IconChevronDown size={12} /> : undefined} className="report-status-badge">{STATUS_LABELS[item.status]}</Badge>;
+    const pending = statusPendingIds.has(item.id);
+    const badge = <Badge color={statusTone(item.status)} variant="light" leftSection={<span className="status-dot" />} rightSection={pending ? <Loader size={10} color="currentColor" /> : canWrite && !item.synced_from_doku ? <IconChevronDown size={12} /> : undefined} className="report-status-badge">{STATUS_LABELS[item.status]}</Badge>;
     if (!canWrite || item.synced_from_doku) return badge;
-    return <Menu position="bottom-end" withinPortal>
-      <Menu.Target><UnstyledButton className="report-status-trigger" aria-label={`Ubah status ${item.reference}`}>{badge}</UnstyledButton></Menu.Target>
+    return <Menu position="bottom-end" withinPortal disabled={pending}>
+      <Menu.Target><UnstyledButton className="report-status-trigger" disabled={pending} aria-busy={pending} aria-label={`Ubah status ${item.reference}`}>{badge}</UnstyledButton></Menu.Target>
       <Menu.Dropdown>{STATUS_OPTIONS.map((option) => <Menu.Item key={option} disabled={option === item.status} leftSection={<span className="status-option-dot" style={{ background: `var(--mantine-color-${statusTone(option)}-6)` }} />} onClick={() => changeStatus(item, option)}>{STATUS_LABELS[option]}</Menu.Item>)}</Menu.Dropdown>
     </Menu>;
   };

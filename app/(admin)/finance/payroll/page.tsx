@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActionIcon, Badge, Box, Button, Card, Group, Menu, Modal, NumberInput, ScrollArea, Select, SimpleGrid,
+  ActionIcon, Badge, Box, Button, Card, Group, Loader, Menu, Modal, NumberInput, ScrollArea, Select, SimpleGrid,
   Skeleton, Stack, Table, Text, Textarea, TextInput, UnstyledButton,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -65,6 +65,8 @@ export default function PayrollPage() {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
+  const [statusPendingIds, setStatusPendingIds] = useState<Set<number>>(new Set());
+  const [resendingIds, setResendingIds] = useState<Set<number>>(new Set());
   const [reimbursementTarget, setReimbursementTarget] = useState<PayrollRow | null>(null);
   const [reimbursements, setReimbursements] = useState<PayrollReimbursement[] | null>(null);
 
@@ -135,9 +137,23 @@ export default function PayrollPage() {
     }
   };
 
+  const markStatusPending = (id: number, pending: boolean) => setStatusPendingIds((current) => {
+    const next = new Set(current);
+    if (pending) next.add(id); else next.delete(id);
+    return next;
+  });
+  const markResending = (id: number, pending: boolean) => setResendingIds((current) => {
+    const next = new Set(current);
+    if (pending) next.add(id); else next.delete(id);
+    return next;
+  });
+
   const changeStatus = async (item: PayrollRow, status: PayrollStatus) => {
+    if (statusPendingIds.has(item.id)) return;
+    markStatusPending(item.id, true);
     try {
       await updatePayrollStatus(item.id, status);
+      setItems((current) => current.map((row) => row.id === item.id ? { ...row, status } : row));
       notifications.show({
         color: status === "done" ? "teal" : "yellow",
         message: status === "done" ? `${item.staff.full_name} ditandai Done — slip gaji sedang dikirim via email.` : `${item.staff.full_name} diubah menjadi Pending.`,
@@ -145,6 +161,8 @@ export default function PayrollPage() {
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal mengubah status." });
+    } finally {
+      markStatusPending(item.id, false);
     }
   };
 
@@ -185,20 +203,25 @@ export default function PayrollPage() {
   };
 
   const resend = async (item: PayrollRow) => {
+    if (resendingIds.has(item.id)) return;
+    markResending(item.id, true);
     try {
       await resendPayslip(item.id);
       notifications.show({ color: "teal", message: `Slip gaji ${item.staff.full_name} dikirim ulang ke ${item.staff.email ?? "email terdaftar"}.` });
       refresh();
     } catch (error) {
       notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal mengirim ulang slip gaji." });
+    } finally {
+      markResending(item.id, false);
     }
   };
 
   const statusMenu = (item: PayrollRow) => {
-    const badge = <Badge color={item.status === "done" ? "teal" : "yellow"} variant="light" leftSection={<span className="status-dot" />} rightSection={canWrite ? <IconChevronDown size={12} /> : undefined} className="report-status-badge">{STATUS_LABELS[item.status]}</Badge>;
+    const pending = statusPendingIds.has(item.id);
+    const badge = <Badge color={item.status === "done" ? "teal" : "yellow"} variant="light" leftSection={<span className="status-dot" />} rightSection={pending ? <Loader size={10} color="currentColor" /> : canWrite ? <IconChevronDown size={12} /> : undefined} className="report-status-badge">{STATUS_LABELS[item.status]}</Badge>;
     if (!canWrite) return badge;
-    return <Menu position="bottom-end" withinPortal>
-      <Menu.Target><UnstyledButton className="report-status-trigger" aria-label={`Ubah status ${item.staff.full_name}`}>{badge}</UnstyledButton></Menu.Target>
+    return <Menu position="bottom-end" withinPortal disabled={pending}>
+      <Menu.Target><UnstyledButton className="report-status-trigger" disabled={pending} aria-busy={pending} aria-label={`Ubah status ${item.staff.full_name}`}>{badge}</UnstyledButton></Menu.Target>
       <Menu.Dropdown>{STATUS_OPTIONS.map((option) => <Menu.Item key={option} disabled={option === item.status} leftSection={<span className="status-option-dot" style={{ background: `var(--mantine-color-${option === "done" ? "teal" : "yellow"}-6)` }} />} onClick={() => changeStatus(item, option)}>{STATUS_LABELS[option]}</Menu.Item>)}</Menu.Dropdown>
     </Menu>;
   };
@@ -248,7 +271,7 @@ export default function PayrollPage() {
                 <Table.Td>{item.payslip_sent_at ? <Badge size="xs" color="teal" variant="light">Terkirim</Badge> : <Badge size="xs" color="gray" variant="light">Belum</Badge>}</Table.Td>
                 <Table.Td>
                   <Menu position="bottom-end">
-                    <Menu.Target><ActionIcon variant="subtle" color="gray" aria-label={`Aksi ${item.staff.full_name}`}><IconDotsVertical size={17} /></ActionIcon></Menu.Target>
+                    <Menu.Target><ActionIcon variant="subtle" color="gray" loading={resendingIds.has(item.id)} aria-label={`Aksi ${item.staff.full_name}`}><IconDotsVertical size={17} /></ActionIcon></Menu.Target>
                     <Menu.Dropdown>
                       <Menu.Item component="a" href={payslipViewUrl(item.id)} target="_blank" rel="noreferrer" leftSection={<IconReceipt2 size={15} />}>Lihat slip gaji</Menu.Item>
                       <Menu.Item leftSection={<IconReceipt2 size={15} />} onClick={() => showReimbursements(item)}>Rincian reimbursement</Menu.Item>
