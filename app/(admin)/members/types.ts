@@ -4,6 +4,7 @@ export type MemberRow = {
   id: string;
   name: string;
   email: string;
+  avatar_url: string | null;
   product: string | null;
   plan: string;
   status: MemberStatus;
@@ -35,7 +36,13 @@ export type MemberDetail = {
   id: string;
   name: string;
   email: string;
+  avatar_url: string | null;
   joined: string;
+  grade: string | null;
+  province: string | null;
+  current_school: string | null;
+  dream_university: string | null;
+  target_major: string | null;
   product: string | null;
   plan: string;
   status: MemberStatus;

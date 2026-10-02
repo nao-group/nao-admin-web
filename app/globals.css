@@ -38,6 +38,9 @@ button, [role="button"] { cursor: pointer; }
 .app-header { border-bottom: 1px solid var(--border) !important; background: rgba(255,253,248,.92) !important; backdrop-filter: blur(14px); }
 .header-brand-zone { height: 100%; border-right: 1px solid var(--border); transition: width 200ms ease; }
 .header-logo, .brand-logo { object-fit: contain; object-position: left center; }
+.header-breadcrumb-link { color: #596476; font-size: 14px; font-weight: 500; text-decoration: none; }
+.header-breadcrumb-link:hover { color: var(--ink); text-decoration: underline; }
+.header-breadcrumb-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
 .app-navbar { border-right: 1px solid var(--border) !important; background: #fffdf8 !important; }
 .brand-box { display: none; min-height: 76px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border); }
 .nav-group-label { padding: 0 12px 8px; color: #9aa0a9; font-size: 10px; font-weight: 700; letter-spacing: .11em; }
@@ -98,6 +101,9 @@ button, [role="button"] { cursor: pointer; }
 .clickable-row { cursor: pointer; transition: background-color 140ms ease, box-shadow 140ms ease; }
 .clickable-row:hover { background: #fff8e7 !important; }
 .clickable-row:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; background: #fff8e7; }
+.photo-preview-trigger { display: inline-flex; flex-shrink: 0; border-radius: 999px; cursor: zoom-in; }
+.photo-preview-trigger:hover { box-shadow: 0 0 0 3px rgba(212,160,23,.28); }
+.photo-preview-trigger:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .detail-hero { border: 1px solid rgba(212,160,23,.2); border-radius: 16px; background: linear-gradient(135deg,#fff9e8,#f7edd2); }
 .detail-item { min-width: 0; padding: 13px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fffdf8; overflow-wrap: anywhere; }
 .payment-detail-value { margin-top: 5px; color: var(--ink); font-family: var(--font-poppins),sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -.025em; }

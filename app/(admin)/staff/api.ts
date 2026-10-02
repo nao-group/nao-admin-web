@@ -45,6 +45,10 @@ export async function listStaff(): Promise<Staff[]> {
   return page.items.map(mapStaff);
 }
 
+export async function getStaffMember(id: number): Promise<Staff> {
+  return mapStaff(await result<RawStaff>(await fetch(`/api/admin/staff/${id}`, { cache: "no-store" })));
+}
+
 export async function getStaffOptions(): Promise<string[]> {
   const options = await result<{ classes: { name: string }[] }>(await fetch("/api/admin/staff/options", { cache: "no-store" }));
   return options.classes.map((item) => item.name);
