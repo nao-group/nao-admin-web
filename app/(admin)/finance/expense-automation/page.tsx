@@ -177,7 +177,7 @@ export default function ExpenseAutomationPage() {
 
     <Card className="surface-card table-card" p={0}>
       <Group p="lg" justify="space-between">
-        <Box><Text className="section-title">Aturan otomatis</Text><Text size="xs" c="dimmed">Sistem membuat transaksi berstatus pending saat jadwal tiba, mulai dari periode setelah aturan dibuat.</Text></Box>
+        <Box><Text className="section-title">Aturan otomatis</Text><Text size="xs" c="dimmed">Sistem langsung mencatat transaksi berstatus done saat jadwal tiba, mulai dari periode setelah aturan dibuat.</Text></Box>
         <Badge color="teal" variant="light">{rules.filter((item) => item.active).length} aktif</Badge>
       </Group>
       <ScrollArea>
