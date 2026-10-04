@@ -12,6 +12,7 @@ import type { Staff } from "@/types/admin";
 import { initials } from "../finance/utils";
 import { deactivateStaff, getProvinces, getStaffOptions, listStaff, saveStaff } from "./api";
 import { blankStaff, DEFAULT_CLASSES, StaffFields } from "./components/staff-fields";
+import { PendingTeachers } from "./components/pending-teachers";
 
 export default function StaffPage() {
   const router = useRouter();
@@ -61,6 +62,7 @@ export default function StaffPage() {
   return <>
     <PageHeader eyebrow="Tim" title="Karyawan & guru" description="Kelola profil, kompetensi pengajar, rekening, dan status seluruh tim NAO Group." action={<Button className="primary-action" leftSection={<IconPlus size={16} />} onClick={() => { setForm(blankStaff()); setPhotoFile(null); setCreating(true); }}>Tambah data</Button>} />
     <SimpleGrid cols={{ base: 1, xs: 2, xl: 4 }} mb="lg"><MetricCard label="Total tim" value={String(staff.length)} icon={IconUsersGroup} tone="gold" /><MetricCard label="Aktif" value={String(staff.filter((item) => item.status === "Active").length)} icon={IconUserCheck} tone="green" /><MetricCard label="Guru" value={String(staff.filter((item) => item.role === "Guru").length)} icon={IconUsersGroup} tone="purple" /><MetricCard label="Payroll aktif" value={formatCurrency(staff.filter((item) => item.status === "Active").reduce((sum, item) => sum + item.baseSalary + item.allowance, 0))} icon={IconCheck} /></SimpleGrid>
+    <PendingTeachers onDecision={() => { void listStaff().then(setStaff).catch((error: Error) => notifications.show({ color: "red", message: error.message })); }} />
     <Card className="surface-card filter-card" p="lg" mb="lg"><Group align="flex-end" wrap="wrap"><TextInput label="Cari tim" placeholder="Nama, email, atau provinsi" value={query} onChange={(event) => setQuery(event.currentTarget.value)} flex={1} miw={220} /><Select label="Peran" value={role} onChange={(value) => setRole(value ?? "Semua peran")} data={["Semua peran", "Guru", "Karyawan", "C-Level"]} w={170} /><Select label="Status" value={status} onChange={(value) => setStatus(value ?? "Semua status")} data={["Semua status", "Active", "Inactive"]} w={155} /><Select label="Urutkan" value={sortBy} onChange={(value) => setSortBy(value ?? "Nama A–Z")} data={["Nama A–Z", "Nama Z–A", "Gaji terbesar", "Terbaru bergabung"]} w={170} /></Group></Card>
     <Card className="surface-card table-card" p={0}>
       <Group p="lg"><Box><Text className="section-title">Direktori tim</Text><Text size="xs" c="dimmed">{loading ? "Memuat data…" : `${filtered.length} orang · klik baris untuk melihat detail`}</Text></Box></Group>
