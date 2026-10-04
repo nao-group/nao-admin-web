@@ -19,6 +19,8 @@ function mapStaff(raw: RawStaff): Staff {
     id: Number(raw.id), fullName: String(raw.full_name ?? ""), email: String(raw.email ?? ""),
     phone: String(raw.phone ?? ""), role: roleFromApi[String(raw.role)] ?? "Karyawan",
     classes: Array.isArray(raw.class_names) ? raw.class_names.map(String) : [],
+    classTypes: Array.isArray(raw.class_types) ? raw.class_types.filter((value): value is "private" | "group" => value === "private" || value === "group") : [],
+    teachingLanguages: Array.isArray(raw.teaching_languages) ? raw.teaching_languages.filter((value): value is "English" | "Chinese" => value === "English" || value === "Chinese") : [],
     bankAccount: String(raw.bank_account_number ?? ""), bankAccountName: String(raw.bank_account_name ?? ""),
     bank: String(raw.bank_name ?? ""), birthDate: String(raw.birth_date ?? ""), joinDate: String(raw.join_date ?? ""),
     photoUrl: typeof raw.photo_url === "string" ? raw.photo_url : "", status: statusFromApi[String(raw.status)] ?? "Inactive",
@@ -32,6 +34,8 @@ function payload(staff: Staff) {
   return {
     full_name: staff.fullName, email: staff.email, phone: staff.phone, role: roleToApi[staff.role],
     class_names: staff.role === "Guru" ? staff.classes : [], bank_account_number: staff.bankAccount,
+    class_types: staff.role === "Guru" ? staff.classTypes : [],
+    teaching_languages: staff.role === "Guru" ? staff.teachingLanguages : [],
     bank_account_name: staff.bankAccountName, bank_name: staff.bank, birth_date: staff.birthDate,
     join_date: staff.joinDate, status: statusToApi[staff.status],
     marital_status: staff.maritalStatus === "Menikah" ? "married" : "single", province: staff.province,

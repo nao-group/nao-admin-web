@@ -51,6 +51,7 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
           <DetailItem label="Jurusan tujuan" value={detail.target_major || "—"} />
         </SimpleGrid>
       </Card>
+      {detail.studynao?.role === "student" && <Card className="surface-card" p="lg"><Text className="section-title" mb="md">StudyNao · Murid</Text><SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}><DetailItem label="Status" value={detail.studynao.status} /><DetailItem label="WhatsApp" value={detail.studynao.profile?.whatsapp || "—"} /><DetailItem label="Jenjang studi" value={detail.studynao.profile?.study_level || "—"} /><DetailItem label="Email orang tua" value={detail.studynao.profile?.parent_email || "—"} /></SimpleGrid></Card>}
       <Card className="surface-card" p="lg">
         <Text className="section-title" mb="md">Riwayat subscription</Text>
         <SubscriptionHistoryTimeline history={detail.history} />

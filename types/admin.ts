@@ -83,6 +83,8 @@ export type Staff = {
   phone: string;
   role: StaffRole;
   classes: string[];
+  classTypes: ("private" | "group")[];
+  teachingLanguages: ("English" | "Chinese")[];
   bankAccount: string;
   bankAccountName: string;
   bank: string;

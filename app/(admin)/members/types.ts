@@ -47,4 +47,5 @@ export type MemberDetail = {
   plan: string;
   status: MemberStatus;
   history: SubscriptionHistoryEntry[];
+  studynao: { role: "student" | "teacher"; status: string; profile: { whatsapp: string; study_level: string; parent_email: string | null } | null } | null;
 };

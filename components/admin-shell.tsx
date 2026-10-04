@@ -31,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/finance/doku-fees", label: "Tarif DOKU", icon: IconSettingsDollar, group: "FINANCE", roles: ["superadmin", "admin"] },
   { href: "/finance/expense-automation", label: "Otomasi Pengeluaran", icon: IconAutomation, group: "FINANCE", roles: ["superadmin", "admin"] },
   { href: "/staff", label: "Karyawan & Guru", icon: IconUsersGroup, group: "TIM", roles: ["superadmin", "admin"] },
+  { href: "/studynao", label: "Konfigurasi StudyNao", icon: IconSchool, group: "STUDYNAO", roles: ["superadmin", "admin"] },
   { href: "/announcements/banners", label: "Banner Pengumuman", icon: IconLayoutDashboard, group: "KONTEN", roles: STAFF_ROLES },
   { href: "/referrals", label: "Kode Referral", icon: IconGift, group: "KONTEN", roles: STAFF_ROLES },
   { href: "/emails", label: "Email Pengumuman", icon: IconMail, group: "KOMUNIKASI", roles: STAFF_ROLES },

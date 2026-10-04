@@ -9,7 +9,7 @@ import { initials } from "../../finance/utils";
 
 export const DEFAULT_CLASSES = ["Mathematics (Chinese)", "Physics (Chinese)", "Chemistry (Chinese)", "Mathematics (English)", "Physics (English)", "Chemistry (English)", "STEM Chinese", "Humanities Chinese"];
 
-export const blankStaff = (): Staff => ({ id: 0, fullName: "", email: "", phone: "", role: "Guru", classes: [], bankAccount: "", bankAccountName: "", bank: "BCA", birthDate: "", joinDate: "", photoUrl: "", status: "Active", maritalStatus: "Belum menikah", province: "", hskLevel: "—", baseSalary: 0, allowance: 0 });
+export const blankStaff = (): Staff => ({ id: 0, fullName: "", email: "", phone: "", role: "Guru", classes: [], classTypes: [], teachingLanguages: [], bankAccount: "", bankAccountName: "", bank: "BCA", birthDate: "", joinDate: "", photoUrl: "", status: "Active", maritalStatus: "Belum menikah", province: "", hskLevel: "—", baseSalary: 0, allowance: 0 });
 
 export function StaffFields({ form, update, photoFile, onPhotoChange, classOptions, provinceOptions }: {
   form: Staff;
@@ -41,6 +41,8 @@ export function StaffFields({ form, update, photoFile, onPhotoChange, classOptio
     {form.role === "Guru" && <Card withBorder radius="md" p="lg">
       <Text className="section-title" mb="md">Data pengajaran</Text>
       <Stack gap="md">
+        <Box><Text size="sm" fw={500} mb={8}>Tipe kelas yang ditangani</Text><Chip.Group multiple value={form.classTypes} onChange={(value) => update("classTypes", value as Staff["classTypes"])}><Group gap="xs"><Chip value="private">Privat</Chip><Chip value="group">Grup</Chip></Group></Chip.Group></Box>
+        <Box><Text size="sm" fw={500} mb={8}>Bahasa ajar</Text><Chip.Group multiple value={form.teachingLanguages} onChange={(value) => update("teachingLanguages", value as Staff["teachingLanguages"])}><Group gap="xs"><Chip value="English">English</Chip><Chip value="Chinese">Chinese</Chip></Group></Chip.Group></Box>
         <Box><Text size="sm" fw={500} mb={8}>Kelas yang ditangani</Text><Chip.Group multiple value={form.classes} onChange={(value) => update("classes", value)}><Group gap="xs">{classOptions.map((option) => <Chip key={option} value={option} variant="outline">{option}</Chip>)}</Group></Chip.Group></Box>
         <Select label="Kemampuan bahasa guru" value={form.hskLevel} onChange={(value) => update("hskLevel", value ?? "—")} data={["—", "HSK 1", "HSK 2", "HSK 3", "HSK 4", "HSK 5", "HSK 6"]} />
       </Stack>
