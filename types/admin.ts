@@ -1,16 +1,3 @@
-export type BannerStatus = "Active" | "Scheduled" | "Draft" | "Expired";
-
-export type Banner = {
-  id: number;
-  name: string;
-  imageUrl: string;
-  fileName: string;
-  redirectUrl: string;
-  status: BannerStatus;
-  startsAt: string;
-  endsAt: string;
-};
-
 export type Referral = {
   id: number;
   code: string;

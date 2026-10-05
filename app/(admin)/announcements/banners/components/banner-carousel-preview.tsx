@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ActionIcon, Box, Group, Text, UnstyledButton } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight, IconExternalLink, IconPhoto } from "@tabler/icons-react";
-import type { Banner } from "@/types/admin";
+import type { Banner } from "../types";
 
 export function BannerCarouselPreview({ banners }: { banners: Banner[] }) {
   const [current, setCurrent] = useState(0);
@@ -12,7 +12,7 @@ export function BannerCarouselPreview({ banners }: { banners: Banner[] }) {
   const previous = () => setCurrent((value) => (value - 1 + banners.length) % banners.length);
   const next = () => setCurrent((value) => (value + 1) % banners.length);
 
-  if (!banners.length) return <Box className="banner-empty"><IconPhoto size={28} /><Text fw={600}>Belum ada banner</Text><Text size="sm" c="dimmed">Upload banner pertama untuk melihat preview carousel.</Text></Box>;
+  if (!banners.length) return <Box className="banner-empty"><IconPhoto size={28} /><Text fw={600}>Belum ada banner yang tayang</Text><Text size="sm" c="dimmed">Banner berstatus Active, atau Scheduled dalam periodenya, akan muncul di sini.</Text></Box>;
 
   return <Box className="banner-preview-shell"><Box className="banner-preview-viewport"><Box className="banner-preview-track" style={{ transform: `translateX(calc(${-safeCurrent} * (82% + 16px)))` }}>{banners.map((banner) => {
     const content = banner.imageUrl ? <Image src={banner.imageUrl} alt={`Pratinjau ${banner.name}`} className="banner-preview-image" fill unoptimized sizes="(max-width: 767px) 90vw, 72vw" /> : <Box className="banner-placeholder"><IconPhoto size={30} /><Text className="banner-placeholder-title">{banner.name}</Text><Text size="sm">Upload gambar untuk mengganti placeholder ini</Text></Box>;
