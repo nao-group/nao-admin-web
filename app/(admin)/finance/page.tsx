@@ -11,7 +11,7 @@ import type { DashboardData } from "./dashboard-types";
 import type { IncomeSource, IncomeStatus } from "./income/types";
 
 const SOURCE_COLOR: Record<IncomeSource, string> = { thinknao: "dark", studynao: "yellow", grant: "teal", other: "violet" };
-const INCOME_STATUS_LABEL: Record<IncomeStatus, string> = { paid: "Paid", unpaid: "Unpaid", failed: "Failed" };
+const INCOME_STATUS_LABEL: Record<IncomeStatus, string> = { paid: "Lunas", unpaid: "Belum dibayar", failed: "Gagal" };
 
 export default function FinanceOverviewPage() {
   const [data, setData] = useState<DashboardData | null>(null);

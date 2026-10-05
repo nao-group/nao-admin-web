@@ -12,7 +12,7 @@ export type PendingTeacher = {
 
 async function read<T>(response: Response): Promise<T> {
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error((body as { detail?: string }).detail ?? "Request failed.");
+  if (!response.ok) throw new Error((body as { detail?: string }).detail ?? "Permintaan gagal.");
   return body as T;
 }
 

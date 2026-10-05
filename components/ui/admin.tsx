@@ -4,8 +4,13 @@ import { Badge, Box, Card, Group, Text, Title } from "@mantine/core";
 import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
 import { statusColor } from "@/lib/format";
 
+const STATUS_LABELS: Record<string, string> = {
+  Active: "Aktif", Inactive: "Nonaktif", Paid: "Lunas", Unpaid: "Belum dibayar", Sent: "Terkirim", Done: "Selesai", Pending: "Menunggu",
+  Scheduled: "Terjadwal", Trial: "Uji coba", Failed: "Gagal", Expired: "Kedaluwarsa", Refunded: "Dikembalikan",
+};
+
 export function StatusBadge({ status }: { status: string }) {
-  return <Badge color={statusColor(status)} variant="light" size="sm" leftSection={<span className="status-dot" />}>{status}</Badge>;
+  return <Badge color={statusColor(status)} variant="light" size="sm" leftSection={<span className="status-dot" />}>{STATUS_LABELS[status] ?? status}</Badge>;
 }
 
 const PAGE_TITLES: Record<string, string> = {

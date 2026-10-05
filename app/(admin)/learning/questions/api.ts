@@ -2,7 +2,7 @@ import type { ExtractionJob, ExtractorReadiness, GalleryImage, PageResult, Provi
 export class QuestionExtractionError extends Error {}
 async function result<T>(response: Response): Promise<T> {
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new QuestionExtractionError(body.detail ?? "Request failed. Please try again.");
+  if (!response.ok) throw new QuestionExtractionError(body.detail ?? "Permintaan gagal. Silakan coba lagi.");
   return body as T;
 }
 export async function createExtraction(subject: string, files: File[]): Promise<ExtractionJob> {

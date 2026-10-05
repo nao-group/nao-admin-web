@@ -10,7 +10,7 @@ async function result<T>(response: Response): Promise<T> {
     const detail = Array.isArray(body.detail)
       ? body.detail.map((item: { msg?: string }) => item.msg?.replace(/^Value error, /, "")).filter(Boolean).join(", ")
       : body.detail;
-    throw new AutoExpenseApiError(detail || "Request failed. Please try again.");
+    throw new AutoExpenseApiError(detail || "Permintaan gagal. Silakan coba lagi.");
   }
   return body as T;
 }

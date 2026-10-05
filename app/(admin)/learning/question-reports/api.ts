@@ -4,7 +4,7 @@ type RawReport = Record<string, unknown>;
 
 async function result<T>(response: Response): Promise<T> {
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.detail ?? "Request failed");
+  if (!response.ok) throw new Error(body.detail ?? "Permintaan gagal");
   return body as T;
 }
 
@@ -32,17 +32,17 @@ function choices(content: unknown, fallback: unknown): Record<string, string> {
 function mapReport(raw: RawReport): QuestionReport {
   const questionId = typeof raw.question_id === "string" ? raw.question_id : "";
   const question: ReportQuestion | null = questionId ? {
-    id: questionId, code: String(raw.question_code ?? "Unknown question"), difficulty: String(raw.difficulty ?? "—"),
-    type: String(raw.question_type ?? "Question"), promptEn: prompt(raw.content_en), promptZh: prompt(raw.content_zh),
+    id: questionId, code: String(raw.question_code ?? "Soal tidak diketahui"), difficulty: String(raw.difficulty ?? "—"),
+    type: String(raw.question_type ?? "Soal"), promptEn: prompt(raw.content_en), promptZh: prompt(raw.content_zh),
     choicesEn: choices(raw.content_en, raw.choices), choicesZh: choices(raw.content_zh, raw.choices),
     answer: String(raw.answer ?? ""), explanationEn: String(raw.explanation_en ?? ""), explanationZh: String(raw.explanation_zh ?? ""),
     imageUrl: typeof raw.image_url === "string" ? raw.image_url : null,
   } : null;
   return {
-    id: String(raw.id), status: statusFromApi[String(raw.status)] ?? "Open", reason: String(raw.reason ?? "Other"),
-    detail: String(raw.details ?? "No additional details were provided."), subject: String(raw.subject_name ?? "Unknown subject"),
-    subjectCode: String(raw.subject_code ?? ""), topic: String(raw.topic_name ?? "Unknown topic"),
-    reportedBy: String(raw.reported_by ?? "Unknown member"), reporterEmail: String(raw.reporter_email ?? ""),
+    id: String(raw.id), status: statusFromApi[String(raw.status)] ?? "Open", reason: String(raw.reason ?? "Lainnya"),
+    detail: String(raw.details ?? "Tidak ada detail tambahan."), subject: String(raw.subject_name ?? "Mata pelajaran tidak diketahui"),
+    subjectCode: String(raw.subject_code ?? ""), topic: String(raw.topic_name ?? "Topik tidak diketahui"),
+    reportedBy: String(raw.reported_by ?? "Anggota tidak diketahui"), reporterEmail: String(raw.reporter_email ?? ""),
     reportedAt: String(raw.created_at), updatedAt: String(raw.updated_at ?? raw.created_at), question,
   };
 }

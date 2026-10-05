@@ -94,7 +94,7 @@ export function DistributionDonut({ items, totalLabel = "total member" }: { item
   });
 
   if (!items.length) {
-    return <Text size="sm" c="dimmed">No members yet.</Text>;
+    return <Text size="sm" c="dimmed">Belum ada member.</Text>;
   }
 
   return (

@@ -24,7 +24,7 @@ import type { DokuFeeOption, IncomeOverview, IncomeRow, IncomeSource, IncomeStat
 
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS: IncomeStatus[] = ["unpaid", "paid", "failed"];
-const STATUS_LABELS: Record<IncomeStatus, string> = { unpaid: "Unpaid", paid: "Paid", failed: "Failed" };
+const STATUS_LABELS: Record<IncomeStatus, string> = { unpaid: "Belum dibayar", paid: "Lunas", failed: "Gagal" };
 const SOURCE_LABELS: Record<IncomeSource, string> = { thinknao: "ThinkNAO", studynao: "StudyNAO", grant: "Hibah", other: "Lainnya" };
 const SOURCE_OPTIONS: { value: IncomeSource; label: string }[] = [
   { value: "grant", label: "Hibah" }, { value: "studynao", label: "StudyNAO" },

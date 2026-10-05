@@ -5,6 +5,7 @@ import {
   ActionIcon, Badge, Box, Button, Card, Group, Loader, Menu, Modal, NumberInput, Pagination, ScrollArea, Select, SimpleGrid,
   Skeleton, Stack, Table, Text, Textarea, TextInput, UnstyledButton,
 } from "@mantine/core";
+import { MonthPickerInput } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
 import {
   IconCalendarPlus, IconCheck, IconChevronDown, IconClockDollar, IconDotsVertical, IconEdit, IconMailForward,
@@ -22,7 +23,7 @@ import type { PayrollOverview, PayrollReimbursement, PayrollRow, PayrollStatus, 
 
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS: PayrollStatus[] = ["pending", "done"];
-const STATUS_LABELS: Record<PayrollStatus, string> = { pending: "Pending", done: "Done" };
+const STATUS_LABELS: Record<PayrollStatus, string> = { pending: "Menunggu", done: "Selesai" };
 
 const MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 const EXPENSE_CATEGORY_LABELS: Record<string, string> = { bank_fee: "Biaya admin bank", maintenance: "Maintenance", reimbursement: "Reimbursement", other: "Lainnya" };
@@ -252,7 +253,7 @@ export default function PayrollPage() {
     <Card className="surface-card filter-card" p="lg" mb="lg">
       <Group align="flex-end" wrap="wrap">
         <TextInput label="Cari" placeholder="Nama staff" value={query} onChange={(event) => { setQuery(event.currentTarget.value); setPage(1); }} flex={1} miw={200} />
-        <TextInput type="month" label="Periode" value={periodFilter} onChange={(event) => { setPeriodFilter(event.currentTarget.value); setPage(1); }} w={170} />
+        <MonthPickerInput label="Periode" placeholder="Semua periode" value={periodFilter ? `${periodFilter}-01` : null} onChange={(value) => { setPeriodFilter(value ? value.slice(0, 7) : ""); setPage(1); }} valueFormat="MMMM YYYY" clearable w={170} />
         <Select label="Status" value={statusFilter} onChange={(value) => { setStatusFilter((value || null) as PayrollStatus | null); setPage(1); }} data={[{ value: "", label: "Semua status" }, ...STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABELS[s] }))]} clearable w={150} />
       </Group>
     </Card>
@@ -304,7 +305,7 @@ export default function PayrollPage() {
       <Stack>
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
           <Select label="Staff" required searchable value={form.staff_id ? String(form.staff_id) : null} onChange={(value) => pickStaff(Number(value) || 0)} data={staffOptions.map((s) => ({ value: String(s.id), label: `${s.full_name} — ${s.role_label}` }))} />
-          <TextInput type="month" label="Periode" required value={form.period} onChange={(event) => update("period", event.currentTarget.value)} />
+          <MonthPickerInput label="Periode" placeholder="Pilih periode" required value={form.period ? `${form.period}-01` : null} onChange={(value) => update("period", value ? value.slice(0, 7) : "")} valueFormat="MMMM YYYY" />
           <NumberInput label="Gaji pokok" required min={0} value={form.base_salary} onChange={(value) => update("base_salary", Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," />
           <NumberInput label="Tunjangan" min={0} value={form.allowance} onChange={(value) => update("allowance", Number(value) || 0)} prefix="Rp " thousandSeparator="." decimalSeparator="," />
           <NumberInput label="Reimbursement" description="Otomatis dari pengeluaran yang dibayar karyawan ini" readOnly variant="filled" value={formReimbursement} prefix="Rp " thousandSeparator="." decimalSeparator="," />

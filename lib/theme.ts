@@ -51,5 +51,13 @@ export const theme = createTheme({
         popoverProps: { withinPortal: true, position: "bottom-end" },
       },
     },
+    MonthPickerInput: {
+      defaultProps: {
+        radius: "md",
+        size: "xs",
+        locale: "id",
+        popoverProps: { withinPortal: true, position: "bottom-end" },
+      },
+    },
   },
 });

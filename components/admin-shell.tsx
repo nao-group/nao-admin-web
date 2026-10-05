@@ -93,7 +93,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     ? { href: "/members", parent: "Member", current: "Detail Member" }
     : /^\/staff\/[^/]+\/?$/.test(pathname)
       ? { href: "/staff", parent: "Karyawan & Guru", current: "Detail Karyawan & Guru" }
-      : null;
+      : /^\/studynao\/scheduling\/overlaps\/[^/]+\/?$/.test(pathname)
+        ? { href: "/studynao/scheduling", parent: "StudyNao Scheduling", current: "Find Private Class Overlaps" }
+        : null;
   const role = primaryRole(session.roles);
   const initials = session.user.full_name.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase();
   const navigate = (href: string) => { router.push(href); setMobileOpened(false); };

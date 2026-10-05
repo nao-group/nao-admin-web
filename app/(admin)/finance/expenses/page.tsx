@@ -25,7 +25,7 @@ import type { ExpenseCategory, ExpenseOverview, ExpenseRow, ExpenseStatus, Expen
 
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS: ExpenseStatus[] = ["pending", "done"];
-const STATUS_LABELS: Record<ExpenseStatus, string> = { pending: "Pending", done: "Done" };
+const STATUS_LABELS: Record<ExpenseStatus, string> = { pending: "Menunggu", done: "Selesai" };
 const CATEGORY_LABELS: Record<ExpenseCategory, string> = { payroll: "Gaji", bank_fee: "Biaya admin bank", maintenance: "Maintenance", reimbursement: "Reimbursement", other: "Lainnya" };
 const CATEGORY_OPTIONS: { value: ExpenseCategory; label: string }[] = [
   { value: "payroll", label: "Gaji" }, { value: "bank_fee", label: "Biaya admin bank" },

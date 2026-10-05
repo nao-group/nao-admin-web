@@ -11,13 +11,16 @@ import { StagedImageEditor } from "../staged-image-editor";
 import type { GalleryImage, PageResult } from "../types";
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "All statuses" },
-  { value: "ready", label: "Ready" },
-  { value: "hold", label: "Hold" },
+  { value: "all", label: "Semua status" },
+  { value: "ready", label: "Siap" },
+  { value: "hold", label: "Ditahan" },
   { value: "error", label: "Error" },
-  { value: "processing", label: "Processing" },
+  { value: "processing", label: "Diproses" },
   { value: "synced", label: "Synced" },
 ];
+
+const STATUS_LABEL: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
+const statusLabel = (status: string) => STATUS_LABEL[status] ?? status;
 
 function statusColor(status: string): string {
   if (status === "synced") return "teal";
@@ -50,7 +53,7 @@ export default function QuestionImageGalleryPage() {
     const timer = window.setTimeout(() => {
       setLoading(true);
       void loadGallery()
-        .catch((error) => { if (active) notifications.show({ color: "red", title: "Could not load image gallery", message: error instanceof Error ? error.message : "Try again." }); })
+        .catch((error) => { if (active) notifications.show({ color: "red", title: "Gagal memuat galeri gambar", message: error instanceof Error ? error.message : "Silakan coba lagi." }); })
         .finally(() => { if (active) setLoading(false); });
     }, 250);
     return () => { active = false; window.clearTimeout(timer); };
@@ -70,7 +73,7 @@ export default function QuestionImageGalleryPage() {
       notifications.show({ color: "teal", message: successMessage });
       await loadGallery();
     } catch (error) {
-      notifications.show({ color: "red", title: "Image update failed", message: error instanceof Error ? error.message : "Try again." });
+      notifications.show({ color: "red", title: "Gagal memperbarui gambar", message: error instanceof Error ? error.message : "Silakan coba lagi." });
       await loadGallery().catch(() => undefined);
     } finally {
       setBusy(false);
@@ -79,12 +82,12 @@ export default function QuestionImageGalleryPage() {
 
   const replaceImage = async (file: File) => {
     if (!selected) return;
-    await mutateImage(() => replaceStagedImage(selected.job_id, selected.id, file), "Image replaced.");
+    await mutateImage(() => replaceStagedImage(selected.job_id, selected.id, file), "Gambar diganti.");
   };
 
   const cropImage = async (box: { x0: number; y0: number; x1: number; y1: number }) => {
     if (!selected) return;
-    await mutateImage(() => cropStagedImage(selected.job_id, selected.id, box), "Crop saved.");
+    await mutateImage(() => cropStagedImage(selected.job_id, selected.id, box), "Crop tersimpan.");
   };
 
   const removeImage = async () => {
@@ -92,13 +95,13 @@ export default function QuestionImageGalleryPage() {
     setBusy(true);
     try {
       await deleteStagedImage(selected.job_id, selected.id);
-      notifications.show({ color: "teal", message: "Image removed from the draft." });
+      notifications.show({ color: "teal", message: "Gambar dihapus dari draft." });
       setConfirmRemove(false);
       setSelected(null);
       const data = await loadGallery();
       if (data.items.length === 0 && page > 1) setPage((current) => current - 1);
     } catch (error) {
-      notifications.show({ color: "red", title: "Could not remove image", message: error instanceof Error ? error.message : "Try again." });
+      notifications.show({ color: "red", title: "Gagal menghapus gambar", message: error instanceof Error ? error.message : "Silakan coba lagi." });
       setConfirmRemove(false);
       await loadGallery().catch(() => undefined);
     } finally {
@@ -124,7 +127,7 @@ export default function QuestionImageGalleryPage() {
           <Select label="Status" data={STATUS_OPTIONS} value={status} allowDeselect={false}
             onChange={(value) => { setStatus(value ?? "all"); setPage(1); }} />
           <ActionIcon variant="light" color="dark" size={36} aria-label="Muat ulang galeri" title="Muat ulang galeri"
-            onClick={() => { setLoading(true); void loadGallery().catch((error) => notifications.show({ color: "red", message: error instanceof Error ? error.message : "Coba lagi." })).finally(() => setLoading(false)); }}>
+            onClick={() => { setLoading(true); void loadGallery().catch((error) => notifications.show({ color: "red", message: error instanceof Error ? error.message : "Silakan coba lagi." })).finally(() => setLoading(false)); }}>
             <IconRefresh size={18}/>
           </ActionIcon>
         </Group>
@@ -133,14 +136,14 @@ export default function QuestionImageGalleryPage() {
 
       {loading ? <Center mih={360}><Loader color="yellow"/></Center> : gallery.items.length ? <>
         <SimpleGrid cols={{ base: 1, xs: 2, md: 3, xl: 4 }} spacing="lg" p="lg">
-          {gallery.items.map((item) => <UnstyledButton key={`${item.status}-${item.id}`} className="question-gallery-card" onClick={() => setSelected(item)} aria-label={`${item.editable ? "Edit" : "Preview"} image for ${item.code}`}>
+          {gallery.items.map((item) => <UnstyledButton key={`${item.status}-${item.id}`} className="question-gallery-card" onClick={() => setSelected(item)} aria-label={`${item.editable ? "Edit" : "Preview"} gambar untuk ${item.code}`}>
             <Box className="question-gallery-image-wrap">
-              <Image src={item.image_url} alt={`Extracted figure for ${item.code}`} h={190} fit="contain" loading="lazy"/>
-              <span className="question-gallery-action">{item.editable ? <><IconEdit size={15}/> Edit</> : <><IconLock size={14}/> View</>}</span>
+              <Image src={item.image_url} alt={`Gambar hasil ekstraksi untuk ${item.code}`} h={190} fit="contain" loading="lazy"/>
+              <span className="question-gallery-action">{item.editable ? <><IconEdit size={15}/> Edit</> : <><IconLock size={14}/> Lihat</>}</span>
             </Box>
             <Stack gap={7} p="md">
-              <Group justify="space-between" gap="xs" wrap="nowrap"><Text fw={800} ff="monospace" size="sm" truncate>{item.code}</Text><Badge color={statusColor(item.status)} variant="light" size="sm">{item.status}</Badge></Group>
-              <Group gap={6} wrap="nowrap"><Badge color="gray" variant="outline" size="xs">{item.subject ?? "—"}</Badge><Text size="xs" c="dimmed" truncate>{item.source_file_name || "Extracted question image"}</Text></Group>
+              <Group justify="space-between" gap="xs" wrap="nowrap"><Text fw={800} ff="monospace" size="sm" truncate>{item.code}</Text><Badge color={statusColor(item.status)} variant="light" size="sm">{statusLabel(item.status)}</Badge></Group>
+              <Group gap={6} wrap="nowrap"><Badge color="gray" variant="outline" size="xs">{item.subject ?? "—"}</Badge><Text size="xs" c="dimmed" truncate>{item.source_file_name || "Gambar soal hasil ekstraksi"}</Text></Group>
             </Stack>
           </UnstyledButton>)}
         </SimpleGrid>
@@ -154,13 +157,13 @@ export default function QuestionImageGalleryPage() {
     <Modal opened={Boolean(selected)} onClose={() => !busy && setSelected(null)} title={selected ? `${selected.editable ? "Edit gambar" : "Preview gambar"} · ${selected.code}` : "Preview gambar"} size="xl" centered closeOnClickOutside={!busy}>
       {selected && <Stack gap="lg">
         <Group justify="space-between" align="flex-start">
-          <Box><Group gap="xs"><Badge color={statusColor(selected.status)} variant="light">{selected.status}</Badge>{selected.subject && <Badge color="gray" variant="outline">{selected.subject}</Badge>}</Group><Text size="sm" c="dimmed" mt={7}>{selected.source_file_name || "Extracted question image"}</Text></Box>
-          <ActionIcon variant="light" color="dark" aria-label="Copy image link" title="Copy image link" onClick={() => void navigator.clipboard.writeText(selected.image_url).then(() => notifications.show({ color: "teal", message: "Image link copied." }))}><IconCopy size={17}/></ActionIcon>
+          <Box><Group gap="xs"><Badge color={statusColor(selected.status)} variant="light">{statusLabel(selected.status)}</Badge>{selected.subject && <Badge color="gray" variant="outline">{selected.subject}</Badge>}</Group><Text size="sm" c="dimmed" mt={7}>{selected.source_file_name || "Gambar soal hasil ekstraksi"}</Text></Box>
+          <ActionIcon variant="light" color="dark" aria-label="Salin link gambar" title="Salin link gambar" onClick={() => void navigator.clipboard.writeText(selected.image_url).then(() => notifications.show({ color: "teal", message: "Link gambar disalin." }))}><IconCopy size={17}/></ActionIcon>
         </Group>
 
         {selected.editable
           ? <StagedImageEditor key={selected.image_url} url={selected.image_url} busy={busy} onCrop={cropImage}/>
-          : <><Image src={selected.image_url} alt={`Extracted figure for ${selected.code}`} fit="contain" mah="65vh" radius="md" className="question-gallery-modal-image"/><Alert color={selected.status === "synced" ? "teal" : "yellow"} variant="light" icon={selected.status === "synced" ? <IconLock size={18}/> : <IconAlertCircle size={18}/>} title={selected.status === "synced" ? "Synced question" : "Image editing unavailable"}>{selected.status === "synced" ? "This image has been published to the question bank and is read-only." : "Wait until extraction finishes before editing this image."}</Alert></>}
+          : <><Image src={selected.image_url} alt={`Gambar hasil ekstraksi untuk ${selected.code}`} fit="contain" mah="65vh" radius="md" className="question-gallery-modal-image"/><Alert color={selected.status === "synced" ? "teal" : "yellow"} variant="light" icon={selected.status === "synced" ? <IconLock size={18}/> : <IconAlertCircle size={18}/>} title={selected.status === "synced" ? "Soal sudah synced" : "Gambar belum dapat diedit"}>{selected.status === "synced" ? "Gambar ini sudah dipublikasikan ke bank soal dan hanya dapat dibaca." : "Tunggu hingga ekstraksi selesai sebelum mengedit gambar ini."}</Alert></>}
 
         {selected.editable && <><Divider/><input ref={replaceImageRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void replaceImage(file); }}/><Group justify="space-between" gap="sm"><Group gap="xs"><Button variant="light" disabled={busy} leftSection={<IconPhoto size={17}/>} onClick={() => replaceImageRef.current?.click()}>Ganti gambar</Button><Button variant="subtle" disabled={busy} leftSection={<IconCopy size={16}/>} onClick={() => void navigator.clipboard.writeText(selected.image_url).then(() => notifications.show({ color: "teal", message: "Link gambar disalin." }))}>Salin link</Button></Group><Button variant="light" color="red" disabled={busy} leftSection={<IconTrash size={16}/>} onClick={() => setConfirmRemove(true)}>Hapus gambar</Button></Group></>}
       </Stack>}

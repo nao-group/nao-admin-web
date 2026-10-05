@@ -7,7 +7,7 @@ export class PayrollApiError extends Error {}
 
 async function result<T>(response: Response): Promise<T> {
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new PayrollApiError(body.detail ?? "Request failed. Please try again.");
+  if (!response.ok) throw new PayrollApiError(body.detail ?? "Permintaan gagal. Silakan coba lagi.");
   return body as T;
 }
 

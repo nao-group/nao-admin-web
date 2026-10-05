@@ -7,13 +7,14 @@
 .month .date { min-height: 115px; }
 .date[data-outside] { opacity: .5; }
 .date[data-today] { background: rgba(212, 160, 23, .12); }
-.event { padding: 8px; border-left: 3px solid #d4a017; border-radius: 7px; background: rgba(212, 160, 23, .13); }
-.timeline { display: grid; grid-template-columns: 58px repeat(7, minmax(150px, 1fr)); min-width: 1108px; }
-.timeline[data-view="day"] { grid-template-columns: 58px minmax(320px, 1fr); min-width: 430px; }
+.event { cursor: pointer; padding: 8px; border-left: 3px solid #d4a017; border-radius: 7px; background: rgba(212, 160, 23, .13); }
+.timeline { display: grid; grid-template-columns: 58px repeat(7, minmax(150px, 1fr)); min-width: 100%; width: max-content; }
+.timeline[data-view="day"] { grid-template-columns: 58px minmax(320px, 1fr); }
 .timeColumn { position: relative; border-right: 1px solid var(--mantine-color-default-border); }
-.timeColumn span { position: absolute; right: 6px; transform: translateY(-50%); font-size: 11px; color: var(--mantine-color-dimmed); }
+.timeColumn span { position: absolute; right: 6px; transform: translateY(-50%); font-size: 10px; color: var(--mantine-color-dimmed); }
+.timeColumn span[data-hour] { font-size: 11px; font-weight: 600; }
 .timeHeader, .timelineHead { height: 38px; border-bottom: 1px solid var(--mantine-color-default-border); }
 .timelineHead { display: flex; align-items: center; justify-content: center; margin: 0; }
-.timelineDay { border-right: 1px solid var(--mantine-color-default-border); }
-.timeBody { height: 720px; position: relative; background: repeating-linear-gradient(to bottom, transparent 0, transparent 47px, var(--mantine-color-default-border) 47px, var(--mantine-color-default-border) 48px); }
-.timedEvent { position: absolute; left: 3px; right: 3px; overflow: hidden; padding: 5px 7px; border-left: 3px solid #d4a017; border-radius: 6px; background: var(--mantine-color-yellow-light); z-index: 1; }
+.timelineDay { min-width: 0; border-right: 1px solid var(--mantine-color-default-border); }
+.timeBody { height: 1440px; position: relative; background: repeating-linear-gradient(to bottom, transparent 0, transparent 23px, var(--mantine-color-default-border) 23px, var(--mantine-color-default-border) 24px), repeating-linear-gradient(to bottom, transparent 0, transparent 95px, rgba(128, 128, 128, .35) 95px, rgba(128, 128, 128, .35) 96px); }
+.timedEvent { cursor: pointer; position: absolute; box-sizing: border-box; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; padding: 5px 7px; border-left: 3px solid #d4a017; border-radius: 6px; background: var(--mantine-color-yellow-light); z-index: 1; }

@@ -20,11 +20,11 @@ export function StagedImageEditor({ url, busy, onCrop }: { url: string; busy: bo
     x1: Math.max(start.x, end.x), y1: Math.max(start.y, end.y) } : null;
   const canCrop = box && box.x1 - box.x0 > 0.02 && box.y1 - box.y0 > 0.02;
   return <Stack gap="xs">
-    <Text size="sm" c="dimmed">Drag a rectangle over the image, then save the crop.</Text>
+    <Text size="sm" c="dimmed">Seret persegi panjang pada gambar, lalu simpan crop.</Text>
     <div style={{ position: "relative", width: "fit-content", maxWidth: "100%", touchAction: "none" }}>
       {/* The image itself owns the pointer coordinates, so the selection matches its rendered pixels. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img ref={imageRef} src={url} alt="Question figure to crop" draggable={false}
+      <img ref={imageRef} src={url} alt="Gambar soal yang akan di-crop" draggable={false}
         style={{ display: "block", maxWidth: "100%", maxHeight: 500, cursor: "crosshair" }}
         onPointerDown={(event) => { dragging.current = true; event.currentTarget.setPointerCapture(event.pointerId); const next = point(event); setStart(next); setEnd(next); }}
         onPointerMove={(event) => { if (dragging.current) setEnd(point(event)); }}
@@ -35,6 +35,6 @@ export function StagedImageEditor({ url, busy, onCrop }: { url: string; busy: bo
         border: "2px solid #d4a017", background: "rgba(212,160,23,.18)" }} />}
     </div>
     <Group><Button size="xs" disabled={!canCrop} loading={busy} onClick={async () => { if (box) { await onCrop(box); setStart(null); setEnd(null); } }}>Simpan crop</Button>
-      <Button size="xs" variant="subtle" disabled={!box || busy} onClick={() => { setStart(null); setEnd(null); }}>Clear selection</Button></Group>
+      <Button size="xs" variant="subtle" disabled={!box || busy} onClick={() => { setStart(null); setEnd(null); }}>Hapus pilihan</Button></Group>
   </Stack>;
 }
