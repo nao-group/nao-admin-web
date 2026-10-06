@@ -27,5 +27,7 @@ export async function PATCH(request: Request, context: RouteContext<"/api/admin/
 export async function PUT(request: Request, context: RouteContext<"/api/admin/[...path]">) {
   const { path } = await context.params;
   const contentType = request.headers.get("content-type") ?? "application/json";
-  return forwardApiResponse(await adminApiFetch(target(request, path), { method: "PUT", body: await request.text(), headers: { "content-type": contentType } }));
+  const multipart = contentType.includes("multipart/form-data");
+  return forwardApiResponse(await adminApiFetch(target(request, path), { method: "PUT",
+    body: multipart ? await request.formData() : await request.text(), headers: multipart ? undefined : { "content-type": contentType } }));
 }
