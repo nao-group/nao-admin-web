@@ -6,7 +6,7 @@ import { notifications } from "@mantine/notifications";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import styles from "./admin-calendar.module.css";
 
-type CalendarSession = { id: number; starts_at: string; ends_at: string; status: string; zoom?: { name: string; email: string; password: string } | null; code: string; subject: string; teacher: string; students: string };
+type CalendarSession = { id: number; starts_at: string; ends_at: string; status: string; zoom?: { name: string; email: string; password: string } | null; operations?: { teaching_log: string | null; late_reason: string | null; submitted_at: string | null; attendance_report_completed: boolean } | null; studentAttendance?: { student_user_id: string; student_name: string; status: string; note: string | null }[]; code: string; subject: string; teacher: string; students: string };
 type View = "day" | "week" | "month";
 const inJakarta = (date: Date) => {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
@@ -121,6 +121,9 @@ export function AdminCalendar({ sessions, onZoomChanged }: { sessions: CalendarS
         <div><Text size="xs" c="dimmed">Guru</Text><Text fw={600}>{detail.teacher || "—"}</Text></div>
         <div><Text size="xs" c="dimmed">Akun Zoom</Text>{detail.zoom ? <><Text fw={600}>{detail.zoom.name}</Text><Text size="sm">{detail.zoom.email}</Text><Text size="sm">Kata sandi: <Text span ff="monospace" fw={600}>{detail.zoom.password}</Text></Text></> : <Text fw={600}>Belum dipetakan</Text>}{detail.status !== "cancelled" && <ZoomAssigner key={`${detail.id}:${detail.zoom?.email ?? ""}`} sessionId={detail.id} current={Boolean(detail.zoom)} onSaved={() => { setDetail(null); onZoomChanged?.(); }} />}</div>
         <div><Text size="xs" c="dimmed">Murid</Text>{detail.students ? <Stack gap={2}>{detail.students.split(", ").map((name) => <Text key={name} fw={600}>{name}</Text>)}</Stack> : <Text fw={600}>—</Text>}</div>
+        <div><Text size="xs" c="dimmed">Absensi murid</Text>{detail.studentAttendance?.length ? <Stack gap="xs" mt={6}>{detail.studentAttendance.map((student) => <Group key={student.student_user_id} justify="space-between"><Text size="sm" fw={600}>{student.student_name}</Text><Badge variant="light">{student.status}</Badge></Group>)}</Stack> : <Text size="sm">Belum ada absensi murid.</Text>}</div>
+        <Divider />
+        <div><Text size="xs" c="dimmed">Laporan mengajar dan absensi</Text>{detail.operations?.submitted_at ? <><Badge color="teal" variant="light" mt={6}>Sudah dikirim</Badge><Text size="sm" mt="sm" style={{ whiteSpace: "pre-wrap" }}>{detail.operations.teaching_log}</Text><Text size="xs" c="dimmed" mt="xs">Dikirim {new Date(detail.operations.submitted_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "medium", timeStyle: "short" })} WIB</Text>{detail.operations.late_reason && <Text size="sm" mt="xs">Alasan terlambat: {detail.operations.late_reason}</Text>}</> : <Badge color={new Date(detail.ends_at) < new Date() ? "yellow" : "gray"} variant="light" mt={6}>{new Date(detail.ends_at) < new Date() ? "Menunggu laporan guru" : "Belum waktunya"}</Badge>}</div>
       </Stack>}
     </Drawer>
     {!sessions.length && <Text ta="center" c="dimmed" py="lg">Tidak ada sesi yang sesuai dengan filter.</Text>}

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AppShell, Avatar, Box, Burger, Center, Divider, Group, Loader, ScrollArea, Stack, Text, Tooltip, UnstyledButton } from "@mantine/core";
-import { IconAutomation, IconCalendarEvent, IconCashBanknote, IconFileInvoice, IconGift, IconLayoutDashboard, IconLogout, IconMail, IconMessageReport, IconReceipt, IconSchool, IconSettingsDollar, IconUsers, IconUsersGroup, IconWallet, type Icon } from "@tabler/icons-react";
+import { IconAutomation, IconBook, IconCalendarEvent, IconCashBanknote, IconFileInvoice, IconGift, IconLayoutDashboard, IconLogout, IconMail, IconMessageReport, IconReceipt, IconSchool, IconSettingsDollar, IconUsers, IconUsersGroup, IconWallet, type Icon } from "@tabler/icons-react";
 import { defaultAdminRoute, hasAnyRole, primaryRole, ROLE_LABELS, type AdminRole } from "@/lib/admin-access";
 import { getAdminSession, logoutAdmin } from "@/lib/auth-api";
 import { useAuthStore } from "@/store/auth";
@@ -34,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/staff", label: "Karyawan & Guru", icon: IconUsersGroup, group: "TIM", roles: ["superadmin", "admin"] },
   { href: "/studynao", label: "Konfigurasi StudyNao", icon: IconSchool, group: "STUDYNAO", roles: ["superadmin", "admin"] },
   { href: "/studynao/scheduling", label: "StudyNao Scheduling", icon: IconCalendarEvent, group: "STUDYNAO", roles: ["superadmin", "admin"] },
+  { href: "/studynao/classes", label: "StudyNao Classes", icon: IconBook, group: "STUDYNAO", roles: STAFF_ROLES },
   { href: "/announcements/banners", label: "Banner Pengumuman", icon: IconLayoutDashboard, group: "KONTEN", roles: STAFF_ROLES },
   { href: "/referrals", label: "Kode Referral", icon: IconGift, group: "KONTEN", roles: STAFF_ROLES },
   { href: "/emails", label: "Email Pengumuman", icon: IconMail, group: "KOMUNIKASI", roles: STAFF_ROLES },
@@ -95,7 +96,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       ? { href: "/staff", parent: "Karyawan & Guru", current: "Detail Karyawan & Guru" }
       : /^\/studynao\/scheduling\/overlaps\/[^/]+\/?$/.test(pathname)
         ? { href: "/studynao/scheduling", parent: "StudyNao Scheduling", current: "Find Private Class Overlaps" }
-        : null;
+        : /^\/studynao\/classes\/[^/]+\/?$/.test(pathname)
+          ? { href: "/studynao/classes", parent: "StudyNao Classes", current: "Class Details" }
+          : null;
   const role = primaryRole(session.roles);
   const initials = session.user.full_name.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase();
   const navigate = (href: string) => { router.push(href); setMobileOpened(false); };

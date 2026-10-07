@@ -1,4 +1,5 @@
-export type MemberStatus = "Active" | "Trial" | "Inactive";
+export type MemberStatus = "Active" | "Trial" | "Inactive" | "Pending";
+export type MemberProduct = { name: string; plan: string; status: MemberStatus };
 
 export type MemberRow = {
   id: string;
@@ -6,6 +7,7 @@ export type MemberRow = {
   email: string;
   avatar_url: string | null;
   product: string | null;
+  products?: MemberProduct[];
   plan: string;
   status: MemberStatus;
   joined: string;
@@ -44,8 +46,18 @@ export type MemberDetail = {
   dream_university: string | null;
   target_major: string | null;
   product: string | null;
+  products?: MemberProduct[];
   plan: string;
   status: MemberStatus;
   history: SubscriptionHistoryEntry[];
   studynao: { role: "student" | "teacher"; status: string; profile: { whatsapp: string; study_level: string; parent_email: string | null } | null } | null;
 };
+
+export type MemberStudyClass = {
+  id: number; code: string; class_type: "private" | "group"; teaching_language: string;
+  subject_name: string; teacher_name: string | null; first_date: string; joined_at: string;
+  first_start: string | null; last_end: string | null;
+  session_count: number; duration_minutes: number; completed_sessions: number; active_sessions: number;
+  lifecycle_status: "not_started" | "ongoing" | "completed" | "cancelled";
+};
+export type MemberStudyClassHistory = { items: MemberStudyClass[]; total: number; page: number; page_size: number };

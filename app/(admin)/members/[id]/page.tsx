@@ -1,12 +1,14 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { Badge, Box, Card, Group, SimpleGrid, Skeleton, Stack, Text } from "@mantine/core";
+import { Box, Card, Group, SimpleGrid, Skeleton, Stack, Text } from "@mantine/core";
 import { DetailItem, StatusBadge } from "@/components/ui/admin";
 import { PreviewableAvatar } from "@/components/ui/profile-photo-preview";
 import { formatDate } from "@/lib/format";
 import { getMemberDetail } from "../api";
 import type { MemberDetail } from "../types";
+import { MemberProducts } from "../components/member-products";
+import { StudyNaoClassHistory } from "../components/studynao-class-history";
 import { SubscriptionHistoryTimeline } from "../components/subscription-history-timeline";
 
 export default function MemberDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -36,26 +38,31 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
           <DetailItem label="ID member" value={detail.id} />
           <DetailItem label="Bergabung" value={formatDate(detail.joined)} />
-          <DetailItem label="Produk" value={detail.product ? <Badge variant="outline" color="dark">{detail.product}</Badge> : "—"} />
+          <DetailItem label="Produk" value={<MemberProducts products={detail.products} product={detail.product} />} />
           <DetailItem label="Plan" value={detail.plan || "—"} />
-          <DetailItem label="Status" value={<StatusBadge status={detail.status} />} />
+          <DetailItem label="Status ThinkNao" value={<StatusBadge status={detail.status} />} />
+          {detail.studynao?.role === "student" && <>
+            <DetailItem label="Status StudyNao" value={<StatusBadge status={({ active: "Active", inactive: "Inactive", onboarding: "Pending" }[detail.studynao.status] ?? detail.studynao.status)} />} />
+            <DetailItem label="WhatsApp" value={detail.studynao.profile?.whatsapp || "—"} />
+            <DetailItem label="Email orang tua" value={detail.studynao.profile?.parent_email || "—"} />
+          </>}
         </SimpleGrid>
       </Card>
       <Card className="surface-card" p="lg">
         <Text className="section-title" mb="md">Pendidikan & tujuan</Text>
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-          <DetailItem label="Grade" value={detail.grade || "—"} />
+          <DetailItem label="Grade" value={detail.grade || detail.studynao?.profile?.study_level || "—"} />
           <DetailItem label="Provinsi" value={detail.province || "—"} />
           <DetailItem label="Sekolah saat ini" value={detail.current_school || "—"} />
           <DetailItem label="Universitas impian" value={detail.dream_university || "—"} />
           <DetailItem label="Jurusan tujuan" value={detail.target_major || "—"} />
         </SimpleGrid>
       </Card>
-      {detail.studynao?.role === "student" && <Card className="surface-card" p="lg"><Text className="section-title" mb="md">StudyNao · Murid</Text><SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}><DetailItem label="Status" value={detail.studynao.status} /><DetailItem label="WhatsApp" value={detail.studynao.profile?.whatsapp || "—"} /><DetailItem label="Jenjang studi" value={detail.studynao.profile?.study_level || "—"} /><DetailItem label="Email orang tua" value={detail.studynao.profile?.parent_email || "—"} /></SimpleGrid></Card>}
       <Card className="surface-card" p="lg">
-        <Text className="section-title" mb="md">Riwayat subscription</Text>
+        <Text className="section-title" mb="md">Riwayat subscription ThinkNao</Text>
         <SubscriptionHistoryTimeline history={detail.history} />
       </Card>
+      <StudyNaoClassHistory memberId={detail.id} />
     </Stack>}
   </>;
 }

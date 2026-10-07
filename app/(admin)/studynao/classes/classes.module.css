@@ -1,0 +1,22 @@
+.classRow { cursor: pointer; }
+.classLink { color: var(--ink); font-weight: 700; text-decoration: none; }
+.classLink:hover { text-decoration: underline; }
+.classLink:focus-visible, .navigationLink:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+.workspace { display: grid; grid-template-columns: 280px minmax(0, 1fr); align-items: start; gap: 24px; }
+.sidebar { position: sticky; top: 100px; max-height: calc(100dvh - 124px); display: flex; flex-direction: column; }
+.identity { padding: 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.navigation { display: flex; flex-direction: column; min-height: 0; }
+.navigationLink { display: flex; align-items: center; gap: 10px; padding: 14px; margin: 4px 10px; border: 1px solid transparent; border-radius: 12px; text-decoration: none; color: var(--ink); }
+.navigationLink:hover { background: #f5efe2; }
+.navigationLink[data-active] { border-color: rgba(212,160,23,.35); background: #fff8e5; box-shadow: inset 3px 0 0 var(--gold); }
+.sessionList { overflow-y: auto; min-height: 0; padding-bottom: 12px; }
+.sessionCopy { flex: 1; min-width: 0; }
+.number { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border: 1px solid var(--border); border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--warm); }
+.detail { min-width: 0; scroll-margin-top: 100px; }
+.detail:focus { outline: none; }
+.report { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
+.sessionHeading { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+.attendanceRow { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.attendanceRow:last-child { border-bottom: none; }
+@media (max-width: 1000px) { .workspace { grid-template-columns: 240px minmax(0, 1fr); gap: 18px; } }
+@media (max-width: 760px) { .workspace { grid-template-columns: minmax(0, 1fr); } .sidebar { position: static; max-height: none; } .sessionList { display: flex; overflow-x: auto; padding: 6px 10px 12px; } .sessionList .navigationLink { min-width: 220px; margin: 0 5px; } }
