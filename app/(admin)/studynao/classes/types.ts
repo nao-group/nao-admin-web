@@ -10,7 +10,6 @@ export type StudyClass = {
 };
 export type Session = {
   id: number; class_id: number; session_number: number; starts_at: string; ends_at: string; status: string;
-  zoom_account?: { name: string; email: string } | null;
   operations?: { teaching_log: string | null; late_reason: string | null; submitted_at: string | null; attendance_report_completed: boolean } | null;
   student_attendance?: { student_user_id: string; student_name: string; status: string | null; note: string | null }[];
 };

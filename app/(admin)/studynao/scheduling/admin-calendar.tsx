@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Badge, Button, Divider, Drawer, Group, Select, SegmentedControl, Stack, Text } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
+import { useState } from "react";
+import { Badge, Button, Divider, Drawer, Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import styles from "./admin-calendar.module.css";
 
-type CalendarSession = { id: number; starts_at: string; ends_at: string; status: string; zoom?: { name: string; email: string; password: string } | null; operations?: { teaching_log: string | null; late_reason: string | null; submitted_at: string | null; attendance_report_completed: boolean } | null; studentAttendance?: { student_user_id: string; student_name: string; status: string; note: string | null }[]; code: string; subject: string; teacher: string; students: string };
+type CalendarSession = { id: number; starts_at: string; ends_at: string; status: string; operations?: { teaching_log: string | null; late_reason: string | null; submitted_at: string | null; attendance_report_completed: boolean } | null; studentAttendance?: { student_user_id: string; student_name: string; status: string; note: string | null }[]; code: string; subject: string; teacher: string; students: string };
 type View = "day" | "week" | "month";
 const inJakarta = (date: Date) => {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
@@ -49,43 +48,7 @@ function layoutDay(list: CalendarSession[]) {
   return placed;
 }
 
-type ZoomOption = { id: number; name: string; email: string; available: boolean };
-
-function ZoomAssigner({ sessionId, current, onSaved }: { sessionId: number; current: boolean; onSaved: () => void }) {
-  const [options, setOptions] = useState<ZoomOption[] | null>(null);
-  const [choice, setChoice] = useState<string | null>(null);
-  const [editing, setEditing] = useState(!current);
-  const [saving, setSaving] = useState(false);
-  useEffect(() => {
-    if (!editing) return;
-    let active = true;
-    fetch(`/api/admin/studynao/scheduling/sessions/${sessionId}/zoom-options`, { cache: "no-store" })
-      .then(async (response) => { const body = await response.json().catch(() => ({})); if (!response.ok) throw new Error(body.detail ?? "Gagal memuat akun Zoom."); return body as { items: ZoomOption[] }; })
-      .then((body) => { if (active) setOptions(body.items); })
-      .catch((error) => { if (active) { setOptions([]); notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal memuat akun Zoom." }); } });
-    return () => { active = false; };
-  }, [editing, sessionId]);
-  async function save() {
-    if (!choice) return;
-    setSaving(true);
-    try {
-      const response = await fetch(`/api/admin/studynao/scheduling/sessions/${sessionId}/zoom-account`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ zoom_account_id: Number(choice) }) });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(body.detail ?? "Gagal menyimpan akun Zoom.");
-      notifications.show({ color: "teal", message: "Akun Zoom sesi diperbarui." });
-      onSaved();
-    } catch (error) { notifications.show({ color: "red", message: error instanceof Error ? error.message : "Gagal menyimpan akun Zoom." }); }
-    finally { setSaving(false); }
-  }
-  if (!editing) return <Button variant="subtle" size="xs" px={0} onClick={() => setEditing(true)}>Ubah akun Zoom</Button>;
-  const free = options?.filter((option) => option.available) ?? [];
-  return <Stack gap="xs" mt={6}>
-    <Select label="Pilih akun Zoom yang tersedia" placeholder={options ? (free.length ? "Pilih akun" : "Tidak ada akun tersedia") : "Memuat…"} disabled={!options || !free.length} data={free.map((option) => ({ value: String(option.id), label: `${option.name} · ${option.email}` }))} value={choice} onChange={setChoice} />
-    <Group gap="xs"><Button size="xs" loading={saving} disabled={!choice} onClick={() => void save()}>Simpan</Button>{current && <Button size="xs" variant="default" onClick={() => { setEditing(false); setChoice(null); }}>Batal</Button>}</Group>
-  </Stack>;
-}
-
-export function AdminCalendar({ sessions, onZoomChanged }: { sessions: CalendarSession[]; onZoomChanged?: () => void }) {
+export function AdminCalendar({ sessions }: { sessions: CalendarSession[] }) {
   const [view, setView] = useState<View>("week");
   const [selected, setSelected] = useState(() => inJakarta(new Date()));
   const [detail, setDetail] = useState<CalendarSession | null>(null);
@@ -119,7 +82,6 @@ export function AdminCalendar({ sessions, onZoomChanged }: { sessions: CalendarS
         <div><Text size="xs" c="dimmed">Tanggal</Text><Text fw={600}>{label(inJakarta(new Date(detail.starts_at)), { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</Text></div>
         <div><Text size="xs" c="dimmed">Waktu</Text><Text fw={600}>{time(detail.starts_at)}–{time(detail.ends_at)} WIB · {minuteOfDay(detail.ends_at) - minuteOfDay(detail.starts_at)} menit</Text></div>
         <div><Text size="xs" c="dimmed">Guru</Text><Text fw={600}>{detail.teacher || "—"}</Text></div>
-        <div><Text size="xs" c="dimmed">Akun Zoom</Text>{detail.zoom ? <><Text fw={600}>{detail.zoom.name}</Text><Text size="sm">{detail.zoom.email}</Text><Text size="sm">Kata sandi: <Text span ff="monospace" fw={600}>{detail.zoom.password}</Text></Text></> : <Text fw={600}>Belum dipetakan</Text>}{detail.status !== "cancelled" && <ZoomAssigner key={`${detail.id}:${detail.zoom?.email ?? ""}`} sessionId={detail.id} current={Boolean(detail.zoom)} onSaved={() => { setDetail(null); onZoomChanged?.(); }} />}</div>
         <div><Text size="xs" c="dimmed">Murid</Text>{detail.students ? <Stack gap={2}>{detail.students.split(", ").map((name) => <Text key={name} fw={600}>{name}</Text>)}</Stack> : <Text fw={600}>—</Text>}</div>
         <div><Text size="xs" c="dimmed">Absensi murid</Text>{detail.studentAttendance?.length ? <Stack gap="xs" mt={6}>{detail.studentAttendance.map((student) => <Group key={student.student_user_id} justify="space-between"><Text size="sm" fw={600}>{student.student_name}</Text><Badge variant="light">{student.status}</Badge></Group>)}</Stack> : <Text size="sm">Belum ada absensi murid.</Text>}</div>
         <Divider />

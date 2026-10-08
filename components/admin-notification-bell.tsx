@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ActionIcon, Badge, Box, Group, Indicator, Loader, Menu, Stack, Text } from "@mantine/core";
-import { IconBell, IconCalendarEvent, IconSchool } from "@tabler/icons-react";
+import { IconBell, IconCalendarEvent, IconReceipt, IconSchool } from "@tabler/icons-react";
 import { ADMIN_NOTIFICATIONS_REFRESH } from "@/lib/teacher-approvals";
 import { listAdminNotifications, type AdminNotification } from "@/lib/admin-notifications";
 
@@ -35,7 +35,7 @@ export function AdminNotificationBell() {
     <Menu.Dropdown>
       <Group justify="space-between" px="sm" py="xs"><Text fw={700} size="sm">Notifikasi</Text><Badge variant="light" color="yellow">{items.length} menunggu</Badge></Group>
       <Menu.Divider />
-      {loading ? <Group justify="center" py="md"><Loader size="sm" /></Group> : items.length === 0 ? <Text size="sm" c="dimmed" ta="center" py="md">Tidak ada notifikasi yang perlu ditindaklanjuti.</Text> : <Box mah={340} style={{ overflowY: "auto" }}><Stack gap={0}>{items.map((item) => <Menu.Item key={item.id} leftSection={item.kind === "scheduling" ? <IconCalendarEvent size={18} /> : <IconSchool size={18} />} onClick={() => router.push(item.href)}><Text size="sm" fw={600}>{item.title}</Text><Text size="xs" c="dimmed" lineClamp={2}>{item.description}</Text></Menu.Item>)}</Stack></Box>}
+      {loading ? <Group justify="center" py="md"><Loader size="sm" /></Group> : items.length === 0 ? <Text size="sm" c="dimmed" ta="center" py="md">Tidak ada notifikasi yang perlu ditindaklanjuti.</Text> : <Box mah={340} style={{ overflowY: "auto" }}><Stack gap={0}>{items.map((item) => <Menu.Item key={item.id} leftSection={item.kind === "scheduling" ? <IconCalendarEvent size={18} /> : item.kind === "reimbursement" ? <IconReceipt size={18} /> : <IconSchool size={18} />} onClick={() => router.push(item.href)}><Text size="sm" fw={600}>{item.title}</Text><Text size="xs" c="dimmed" lineClamp={2}>{item.description}</Text></Menu.Item>)}</Stack></Box>}
     </Menu.Dropdown>
   </Menu>;
 }

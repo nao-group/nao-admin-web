@@ -15,14 +15,10 @@
 :global(html[data-mantine-color-scheme="dark"]) .overlapBlock span { color: #a8f0c7; }
 .selectedBlock { z-index: 3; left: 2%; width: 96%; display: flex; align-items: center; justify-content: center; padding: 2px; color: #22230f; background: rgba(239, 192, 51, .82); border: 2px solid #b88b10; font-size: 11px; font-weight: 800; }
 .previewBlock { z-index: 3; left: 2%; width: 96%; display: flex; align-items: center; justify-content: center; color: #7a5700; background: rgba(239, 192, 51, .4); border: 2px dashed #c59418; font-size: 11px; font-weight: 800; }
-.previewBlock[data-zoom-full] { color: #8f2525; background: rgba(226, 71, 71, .24); border-color: #cc4848; }
 .candidate { position: absolute; z-index: 4; left: 0; width: 100%; height: 16px; padding: 0; border: 0; border-bottom: 1px solid rgba(199, 147, 15, .55); background: transparent; cursor: pointer; text-align: left; }
 .candidate:hover, .candidate:focus-visible { outline: 2px solid #d4a017; outline-offset: -2px; background: rgba(239, 192, 51, .28); }
 .candidate[data-selected] { border-bottom-color: #493200; }
-.candidate[data-zoom-full] { border-bottom-color: rgba(205, 71, 71, .8); }
 .candidateDot { position: absolute; left: 4px; top: 4px; width: 7px; height: 7px; border-radius: 50%; background: #c18d0f; box-shadow: 0 0 0 2px rgba(255,255,255,.7); }
-.candidate[data-zoom-full] .candidateDot { background: #d24747; }
-.candidate[data-zoom-unknown] .candidateDot { background: #8a9499; }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; }
 .legendItem { display: inline-flex; align-items: center; gap: 7px; color: var(--mantine-color-dimmed); font-size: 12px; }
 .swatch { display: inline-block; width: 16px; height: 12px; border-radius: 3px; }
@@ -30,6 +26,5 @@
 .teacherSwatch { background: rgba(118, 103, 205, .5); }
 .overlapSwatch { background: rgba(38, 169, 108, .36); border: 1px solid #26a96c; }
 .selectedSwatch { background: #efc033; }
-.fullZoomSwatch { background: #d24747; }
 .selectedList { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 700px) { .timetableScroll { max-height: 65vh; } }
