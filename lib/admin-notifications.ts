@@ -11,7 +11,7 @@ export type AdminNotification = {
 
 type ReimbursementSummary = {
   pending_count: number;
-  latest: { id: number; created_at: string; staff_members: { full_name: string } | null } | null;
+  latest: { id: number; created_at: string; requester?: { full_name: string } | null; staff_members: { full_name: string } | null } | null;
 };
 async function readSource<T>(path: string, fallback: T): Promise<T> {
   const response = await fetch(path, { cache: "no-store" });
@@ -23,7 +23,7 @@ export async function listAdminNotifications(): Promise<AdminNotification[]> {
   const [teacherResult, schedulingResult, reimbursementResult] = await Promise.allSettled([
     listPendingTeachers(),
     readSource<{ requests: { id: number; student?: { full_name?: string } }[] }>("/api/admin/studynao/scheduling", { requests: [] }),
-    readSource<ReimbursementSummary>("/api/admin/studynao/reimbursements/summary", { pending_count: 0, latest: null }),
+    readSource<ReimbursementSummary>("/api/admin/reimbursements/summary", { pending_count: 0, latest: null }),
   ]);
   const teachers = teacherResult.status === "fulfilled" ? teacherResult.value : [];
   const scheduling = schedulingResult.status === "fulfilled" ? schedulingResult.value : { requests: [] };
@@ -45,11 +45,11 @@ export async function listAdminNotifications(): Promise<AdminNotification[]> {
   }))];
   if (reimbursements.pending_count > 0 && reimbursements.latest) {
     items.push({
-      id: "zoom-reimbursements:pending",
+      id: "reimbursements:pending",
       kind: "reimbursement",
-      title: "Reimbursement Zoom menunggu review",
-      description: `${reimbursements.pending_count} pengajuan menunggu. Terbaru dari ${reimbursements.latest.staff_members?.full_name ?? "guru"}.`,
-      href: "/studynao/reimbursements",
+      title: "Reimbursement menunggu review",
+      description: `${reimbursements.pending_count} pengajuan menunggu. Terbaru dari ${reimbursements.latest.requester?.full_name ?? reimbursements.latest.staff_members?.full_name ?? "pemohon"}.`,
+      href: "/finance/reimbursements",
       createdAt: reimbursements.latest.created_at,
     });
   }

@@ -34,7 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/staff", label: "Karyawan & Guru", icon: IconUsersGroup, group: "TIM", roles: ["superadmin", "admin"] },
   { href: "/studynao", label: "Konfigurasi StudyNao", icon: IconSchool, group: "STUDYNAO", roles: ["superadmin", "admin"] },
   { href: "/studynao/scheduling", label: "StudyNao Scheduling", icon: IconCalendarEvent, group: "STUDYNAO", roles: ["superadmin", "admin"] },
-  { href: "/studynao/reimbursements", label: "Reimbursement Zoom", icon: IconSchool, group: "STUDYNAO", roles: ["superadmin", "admin"] },
+  { href: "/finance/reimbursements", label: "Reimbursement", icon: IconReceipt, group: "FINANCE", roles: ["superadmin", "admin"] },
   { href: "/studynao/classes", label: "StudyNao Classes", icon: IconBook, group: "STUDYNAO", roles: STAFF_ROLES },
   { href: "/announcements/banners", label: "Banner Pengumuman", icon: IconLayoutDashboard, group: "KONTEN", roles: STAFF_ROLES },
   { href: "/referrals", label: "Kode Referral", icon: IconGift, group: "KONTEN", roles: STAFF_ROLES },
