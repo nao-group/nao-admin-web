@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import ts from 'typescript';
+const source=readFileSync(new URL('../app/(admin)/studynao/scheduling/schedule-conflicts.ts',import.meta.url),'utf8');
+const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText;
+const { weeklyTeacherConflict: conflict }=await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
+const slot={weekday:0,start_minute:540,end_minute:630};
+const session=(starts_at,ends_at,status='scheduled')=>({starts_at,ends_at,status});
+assert.equal(conflict(slot,'2026-10-12',12,[session('2026-12-28T02:30:00Z','2026-12-28T04:00:00Z')]),true);
+assert.equal(conflict(slot,'2026-10-12',12,[session('2026-10-12T03:30:00Z','2026-10-12T05:00:00Z')]),false);
+assert.equal(conflict(slot,'2026-10-12',12,[session('2026-10-12T01:00:00Z','2026-10-12T02:00:00Z')]),false);
+assert.equal(conflict(slot,'2026-10-12',12,[session('2026-10-12T02:30:00Z','2026-10-12T04:00:00Z','cancelled')]),false);
+assert.equal(conflict(slot,'2026-10-12',12,[session('2027-01-04T02:30:00Z','2027-01-04T04:00:00Z')]),false);
+assert.equal(conflict(slot,'2026-10-13',12,[session('2026-10-12T02:30:00Z','2026-10-12T04:00:00Z')]),false);
+console.log('PASS: WIB, week 12 conflicts, adjacent sessions, cancelled sessions, outside period/start date');

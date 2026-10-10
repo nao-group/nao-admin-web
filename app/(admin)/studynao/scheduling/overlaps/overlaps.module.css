@@ -28,3 +28,6 @@
 .selectedSwatch { background: #efc033; }
 .selectedList { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 700px) { .timetableScroll { max-height: 65vh; } }
+
+.busyBlock { position: absolute; z-index: 3; left: 2%; width: 96%; border: 1px solid var(--mantine-color-red-6); border-radius: 5px; background: var(--mantine-color-red-light); color: var(--mantine-color-red-light-color); pointer-events: auto; font-size: 11px; padding: 3px; overflow: hidden; }
+.busySwatch { background: var(--mantine-color-red-light); border: 1px solid var(--mantine-color-red-6); }
